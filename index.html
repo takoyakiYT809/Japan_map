@@ -1,111 +1,196 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>日本地図ぬりえツール</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 20px;
-    }
-    #controls {
-      margin-bottom: 10px;
-    }
-    #map {
-      width: 800px;
-      max-width: 100%;
-      border: 1px solid #ccc;
-    }
-    #map svg {
-      width: 100%;
-      height: auto;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>日本地図ぬりえツール</title>
+<style>
+  body {
+    font-family: "Segoe UI", sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  #panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    background: #4a6cf7;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+  }
+  .btn:hover {
+    background: #3a57c9;
+  }
+
+  .toggle-btn {
+    background: #555;
+  }
+  .toggle-btn.active {
+    background: #2ecc71;
+  }
+
+  #colorPicker, #bgColorPicker {
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+  }
+
+  #map {
+    width: 900px;
+    max-width: 100%;
+    margin: 0 auto;
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 0 10px #ccc;
+  }
+
+  #map svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .prefecture {
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .prefecture:hover {
+    opacity: 0.7;
+  }
+
+  .label {
+    font-size: 12px;
+    pointer-events: none;
+  }
+</style>
 </head>
 <body>
-  <h1>日本地図ぬりえ</h1>
 
-  <div id="controls">
-    <label>
-      色を選ぶ：
-      <input type="color" id="colorPicker" value="#ff0000">
-    </label>
-    <button id="saveBtn">画像を保存（PNG）</button>
-  </div>
+<h1>日本地図ぬりえツール</h1>
 
-  <div id="map">読み込み中...</div>
+<div id="panel">
+  <label>塗る色：<input type="color" id="colorPicker" value="#ff0000"></label>
+  <label>背景色：<input type="color" id="bgColorPicker" value="#ffffff"></label>
 
-  <script>
-    // 同じフォルダに geolonia の map-full.svg を置いておく
-    const MAP_SVG_PATH = 'map-full.svg';
+  <button class="btn" id="fillAllBtn">全部塗りつぶし</button>
+  <button class="btn" id="resetBtn">リセット</button>
+  <button class="btn toggle-btn" id="labelToggleBtn">県名 ON/OFF</button>
+  <button class="btn" id="saveBtn">画像保存（PNG）</button>
+</div>
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const container = document.getElementById('map');
+<div id="map">読み込み中...</div>
 
-      // SVG日本地図を読み込み
-      try {
-        const res = await fetch(MAP_SVG_PATH);
-        if (!res.ok) throw new Error('SVG読み込み失敗');
-        const svgText = await res.text();
-        container.innerHTML = svgText;
-      } catch (e) {
-        container.textContent = '日本地図SVGの読み込みに失敗しました。';
-        console.error(e);
-        return;
+<script>
+const MAP_SVG_PATH = "map-full.svg";
+
+window.addEventListener("DOMContentLoaded", async () => {
+  const container = document.getElementById("map");
+
+  // SVG読み込み
+  const res = await fetch(MAP_SVG_PATH);
+  const svgText = await res.text();
+  container.innerHTML = svgText;
+
+  const svg = container.querySelector("svg");
+  const prefs = container.querySelectorAll(".prefecture");
+  const labels = container.querySelectorAll(".label");
+
+  const colorInput = document.getElementById("colorPicker");
+  const bgColorInput = document.getElementById("bgColorPicker");
+
+  // 背景色変更
+  bgColorInput.addEventListener("input", () => {
+    container.style.background = bgColorInput.value;
+  });
+
+  // クリックで塗る／消す
+  prefs.forEach(pref => {
+    pref.addEventListener("click", e => {
+      const current = e.currentTarget;
+      const selectedColor = colorInput.value;
+
+      if (current.style.fill === selectedColor) {
+        current.style.fill = ""; // 色を消す
+      } else {
+        current.style.fill = selectedColor;
       }
-
-      const svg = container.querySelector('svg');
-      const prefs = container.querySelectorAll('.prefecture'); // geoloniaのクラス名
-      const colorInput = document.getElementById('colorPicker');
-
-      // 都道府県クリックで選んだ色を塗る
-      prefs.forEach(pref => {
-        pref.style.cursor = 'pointer';
-        pref.addEventListener('click', (event) => {
-          event.currentTarget.style.fill = colorInput.value;
-        });
-      });
-
-      // 画像保存ボタン
-      document.getElementById('saveBtn').addEventListener('click', () => {
-        if (!svg) return;
-
-        // SVGを文字列にシリアライズ
-        const serializer = new XMLSerializer();
-        const svgStr = serializer.serializeToString(svg);
-
-        // BlobにしてURL化
-        const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-        const url = URL.createObjectURL(svgBlob);
-
-        const img = new Image();
-        img.onload = () => {
-          // viewBoxからキャンバスサイズを決める
-          const vb = svg.viewBox.baseVal;
-          const canvas = document.createElement('canvas');
-          canvas.width = vb.width || 1000;
-          canvas.height = vb.height || 1000;
-
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          URL.revokeObjectURL(url);
-
-          // PNGデータURLをダウンロード
-          const pngUrl = canvas.toDataURL('image/png');
-          const a = document.createElement('a');
-          a.href = pngUrl;
-          a.download = 'japan-map.png';
-          a.click();
-        };
-
-        img.onerror = () => {
-          alert('画像変換に失敗しました（CORS設定などを確認してください）。');
-          URL.revokeObjectURL(url);
-        };
-
-        img.src = url;
-      });
     });
-  </script>
+  });
+
+  // 県名 ON/OFF
+  const labelBtn = document.getElementById("labelToggleBtn");
+  let labelVisible = true;
+  labelBtn.addEventListener("click", () => {
+    labelVisible = !labelVisible;
+    labels.forEach(l => {
+      l.style.display = labelVisible ? "block" : "none";
+    });
+    labelBtn.classList.toggle("active");
+  });
+
+  // 全部塗りつぶし
+  document.getElementById("fillAllBtn").addEventListener("click", () => {
+    const c = colorInput.value;
+    prefs.forEach(p => p.style.fill = c);
+  });
+
+  // リセット
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    prefs.forEach(p => p.style.fill = "");
+    container.style.background = "#ffffff";
+    bgColorInput.value = "#ffffff";
+  });
+
+  // PNG保存
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    const serializer = new XMLSerializer();
+    const svgStr = serializer.serializeToString(svg);
+
+    const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+    img.onload = () => {
+      const vb = svg.viewBox.baseVal;
+      const canvas = document.createElement("canvas");
+      canvas.width = vb.width;
+      canvas.height = vb.height;
+
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+
+      URL.revokeObjectURL(url);
+
+      const pngUrl = canvas.toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = pngUrl;
+      a.download = "japan-map.png";
+      a.click();
+    };
+
+    img.src = url;
+  });
+});
+</script>
+
 </body>
 </html>
