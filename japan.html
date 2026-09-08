@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>日本地図ぬりえツール</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 20px;
+    }
+    #controls {
+      margin-bottom: 10px;
+    }
+    #map {
+      width: 800px;
+      max-width: 100%;
+      border: 1px solid #ccc;
+    }
+    #map svg {
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>日本地図ぬりえ</h1>
+
+  <div id="controls">
+    <label>
+      色を選ぶ：
+      <input type="color" id="colorPicker" value="#ff0000">
+    </label>
+    <button id="saveBtn">画像を保存（PNG）</button>
+  </div>
+
+  <div id="map">読み込み中...</div>
+
+  <script>
+    // 同じフォルダに geolonia の map-full.svg を置いておく
+    const MAP_SVG_PATH = 'map-full.svg';
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      const container = document.getElementById('map');
+
+      // SVG日本地図を読み込み
+      try {
+        const res = await fetch(MAP_SVG_PATH);
+        if (!res.ok) throw new Error('SVG読み込み失敗');
+        const svgText = await res.text();
+        container.innerHTML = svgText;
+      } catch (e) {
+        container.textContent = '日本地図SVGの読み込みに失敗しました。';
+        console.error(e);
+        return;
+      }
+
+      const svg = container.querySelector('svg');
+      const prefs = container.querySelectorAll('.prefecture'); // geoloniaのクラス名
+      const colorInput = document.getElementById('colorPicker');
+
+      // 都道府県クリックで選んだ色を塗る
+      prefs.forEach(pref => {
+        pref.style.cursor = 'pointer';
+        pref.addEventListener('click', (event) => {
+          event.currentTarget.style.fill = colorInput.value;
+        });
+      });
+
+      // 画像保存ボタン
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        if (!svg) return;
+
+        // SVGを文字列にシリアライズ
+        const serializer = new XMLSerializer();
+        const svgStr = serializer.serializeToString(svg);
+
+        // BlobにしてURL化
+        const svgBlob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.onload = () => {
+          // viewBoxからキャンバスサイズを決める
+          const vb = svg.viewBox.baseVal;
+          const canvas = document.createElement('canvas');
+          canvas.width = vb.width || 1000;
+          canvas.height = vb.height || 1000;
+
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+
+          // PNGデータURLをダウンロード
+          const pngUrl = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = pngUrl;
+          a.download = 'japan-map.png';
+          a.click();
+        };
+
+        img.onerror = () => {
+          alert('画像変換に失敗しました（CORS設定などを確認してください）。');
+          URL.revokeObjectURL(url);
+        };
+
+        img.src = url;
+      });
+    });
+  </script>
+</body>
+</html>
