@@ -39,9 +39,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ----------------------------------
-       画面切り替え ＆ アニメーション
-    ---------------------------------- */
     .screen {
       display: none;
       width: 100%;
@@ -59,9 +56,7 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    /* ----------------------------------
-       画面1: 新・地図選択画面
-    ---------------------------------- */
+    /* 画面1: 地図選択 */
     .home-container {
       flex: 1;
       display: flex;
@@ -200,9 +195,7 @@
       transform: translateX(6px);
     }
 
-    /* ----------------------------------
-       画面2: ぬりえメイン画面
-    ---------------------------------- */
+    /* 画面2: メイン画面 */
     header {
       background: rgba(12, 17, 29, 0.85);
       backdrop-filter: blur(20px);
@@ -313,39 +306,34 @@
     }
 
     /* ----------------------------------
-       SVG & 地図の判定改善
+       SVG & 境界線の修正 (光る演出の排除)
     ---------------------------------- */
     svg {
       width: 88%;
       height: 88%;
       max-width: 1000px;
       max-height: 760px;
-      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
     }
 
     svg path, svg polygon, svg rect, svg circle {
       cursor: pointer;
-      pointer-events: visiblePainted; /* 線上のクリック判定を有効化 */
-      transition: transform 0.15s ease, fill 0.25s ease, stroke 0.2s ease, filter 0.2s ease;
-      stroke: #475569; /* 境界線を太く・くっきり指定 */
-      stroke-width: 1.2px;
+      pointer-events: visiblePainted;
+      stroke: #0f172a; /* 境界線をしっかり見せる濃い色 */
+      stroke-width: 0.8px;
       stroke-linejoin: round;
       stroke-linecap: round;
-      transform-origin: center center;
+      transition: fill 0.15s ease, opacity 0.15s ease, stroke-width 0.15s ease;
     }
 
-    /* ホバー時の極太境界線＆強調アニメーション */
-    svg path:hover, svg polygon:hover, svg rect:hover, svg circle:hover {
-      opacity: 0.95 !important;
+    /* ホバー時は発光せず、境界線を際立たせて透過させるだけ */
+    svg path:hover, svg polygon:hover, svg rect:hover, svg circle:hover,
+    .hover-active {
+      opacity: 0.75 !important;
       stroke: #ffffff !important;
-      stroke-width: 2.2px !important;
-      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
-      z-index: 99;
+      stroke-width: 1.8px !important;
     }
 
-    /* ----------------------------------
-       フローティング操作バー
-    ---------------------------------- */
+    /* フローティング操作バー */
     .controls-bar {
       display: flex;
       align-items: center;
@@ -434,7 +422,6 @@
       background: var(--border);
     }
 
-    /* ツールチップ */
     #tooltip {
       position: fixed;
       display: none;
@@ -449,7 +436,7 @@
       pointer-events: none;
       z-index: 9999;
       border: 1px solid var(--border-accent);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 15px var(--accent-glow);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
     }
   </style>
 </head>
@@ -649,6 +636,7 @@
     function goHome() {
       hideTooltip();
       document.getElementById('screen-app').classList.remove('active');
+      document.getElementById('screen-home').classList.active = false;
       document.getElementById('screen-home').classList.add('active');
     }
 
@@ -675,41 +663,82 @@
     }
 
     // ----------------------------------
-    // 強力な島・飛び地一括判定ロジック
+    // 完全改修：グループ化＆キーワード一括検出ロジック
     // ----------------------------------
     function setupMapEvents() {
       const svg = wrapper.querySelector('svg');
       if (!svg) return;
 
-      const elements = svg.querySelectorAll('path, polygon, rect, circle');
+      const elements = Array.from(svg.querySelectorAll('path, polygon, rect, circle'));
       const currentCityMap = cityDataMaps[currentMapMode] || {};
 
-      elements.forEach(el => {
+      // 各要素から「キー（コードや名前）」を抽出するヘルパー
+      function getElementKeys(el) {
         const parentG = el.closest('g');
-        
-        // 識別IDの一括取得 (id, data-code, class, 親のidなど)
-        const rawId = el.id || (parentG ? parentG.id : null) || el.getAttribute('data-code') || el.getAttribute('class');
-        
-        let rawName = el.getAttribute('name') || el.getAttribute('title') || el.getAttribute('data-name') ||
-                      (parentG ? (parentG.getAttribute('name') || parentG.getAttribute('title') || parentG.getAttribute('id')) : null);
+        const keys = new Set();
 
-        let regionName = rawName;
-
-        if (currentMapMode === 'japan' && rawName) {
-          const cleanName = rawName.split('/')[0].trim();
-          regionName = japanPrefMap[cleanName] || japanPrefMap[rawName] || rawName;
-        } else {
-          if (rawId && currentCityMap[rawId]) {
-            regionName = currentCityMap[rawId];
-          } else if (rawName && currentCityMap[rawName]) {
-            regionName = currentCityMap[rawName];
+        [
+          el.id,
+          el.getAttribute('class'),
+          el.getAttribute('data-code'),
+          el.getAttribute('name'),
+          el.getAttribute('title'),
+          parentG ? parentG.id : null,
+          parentG ? parentG.getAttribute('class') : null,
+          parentG ? parentG.getAttribute('name') : null
+        ].forEach(val => {
+          if (val) {
+            // クラス名などのスペース区切りやハイフン表記に対応
+            val.toString().split(/[\s_-]+/).forEach(k => {
+              if (k && k !== 'st0' && k !== 'st1' && k !== 'land') keys.add(k);
+            });
+            keys.add(val.toString().trim());
           }
-        }
+        });
+        return Array.from(keys);
+      }
 
+      // 要素と地域名の紐付けマップ構築
+      elements.forEach(el => {
         const computedStyle = window.getComputedStyle(el);
         const originalFill = el.getAttribute('fill') || computedStyle.fill || '#1e293b';
         el.setAttribute('data-default-fill', originalFill);
 
+        const keys = getElementKeys(el);
+        let regionName = null;
+
+        for (const k of keys) {
+          if (currentMapMode === 'japan') {
+            const cleanName = k.split('/')[0].trim();
+            if (japanPrefMap[cleanName]) {
+              regionName = japanPrefMap[cleanName];
+              break;
+            }
+          } else {
+            if (currentCityMap[k]) {
+              regionName = currentCityMap[k];
+              break;
+            }
+          }
+        }
+
+        // 表示用ネームの最終保持
+        if (regionName) {
+          el.setAttribute('data-region-name', regionName);
+        }
+
+        // 同一キーを持つ島・飛び地グループの一括取得
+        function getRelatedElements() {
+          if (regionName) {
+            return elements.filter(item => item.getAttribute('data-region-name') === regionName);
+          }
+          return elements.filter(item => {
+            const itemKeys = getElementKeys(item);
+            return keys.some(k => itemKeys.includes(k));
+          });
+        }
+
+        // クリックイベント
         el.addEventListener('click', (e) => {
           e.stopPropagation();
           hideTooltip();
@@ -718,44 +747,34 @@
           const currentPaintedColor = el.getAttribute('data-color');
           const nextColor = (isPainted && currentPaintedColor === currentColor) ? null : currentColor;
 
-          // 島・飛び地・関連要素の全マルチ一括検索
-          let matchedElements = [];
-
-          if (rawId) {
-            matchedElements = Array.from(svg.querySelectorAll(
-              `[id="${rawId}"], [data-code="${rawId}"], .${rawId}, g[id="${rawId}"] path, g[id="${rawId}"] polygon`
-            ));
-          }
-
-          if (matchedElements.length === 0 && rawName) {
-            matchedElements = Array.from(svg.querySelectorAll(
-              `[name="${rawName}"], [title="${rawName}"], [data-name="${rawName}"]`
-            ));
-          }
-
-          if (matchedElements.length > 0) {
-            matchedElements.forEach(target => applyColor(target, nextColor));
-          } else {
-            applyColor(el, nextColor);
-          }
+          const targets = getRelatedElements();
+          targets.forEach(target => applyColor(target, nextColor));
         });
 
-        if (regionName) {
-          el.addEventListener('mouseenter', (e) => {
-            tooltip.innerText = regionName;
+        // ホバー連携（連動する島・飛び地も一緒にハイライト）
+        el.addEventListener('mouseenter', (e) => {
+          const displayName = el.getAttribute('data-region-name');
+          if (displayName) {
+            tooltip.innerText = displayName;
             tooltip.style.display = 'block';
             tooltip.style.opacity = '1';
             tooltip.style.left = (e.clientX + 14) + 'px';
             tooltip.style.top = (e.clientY + 14) + 'px';
-          });
-          
-          el.addEventListener('mousemove', (e) => {
-            tooltip.style.left = (e.clientX + 14) + 'px';
-            tooltip.style.top = (e.clientY + 14) + 'px';
-          });
-          
-          el.addEventListener('mouseleave', hideTooltip);
-        }
+          }
+          const targets = getRelatedElements();
+          targets.forEach(target => target.classList.add('hover-active'));
+        });
+
+        el.addEventListener('mousemove', (e) => {
+          tooltip.style.left = (e.clientX + 14) + 'px';
+          tooltip.style.top = (e.clientY + 14) + 'px';
+        });
+
+        el.addEventListener('mouseleave', () => {
+          hideTooltip();
+          const targets = getRelatedElements();
+          targets.forEach(target => target.classList.remove('hover-active'));
+        });
       });
     }
 
