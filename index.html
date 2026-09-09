@@ -5,41 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>日本地図ぬりえツール</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
   :root {
     --primary: #4f46e5;
     --primary-hover: #4338ca;
-    --bg-main: #f3f4f6;
-    --card-bg: #ffffff;
-    --text-color: #1f2937;
-    --border-color: #e5e7eb;
+    --bg-main: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-main);
-    color: var(--text-color);
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: var(--text-main);
     margin: 0;
-    padding: 24px 16px;
+    padding: 40px 20px;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  /* ヘッダー・タイトル装飾 */
+  header {
+    text-align: center;
+    margin-bottom: 32px;
   }
 
   h1 {
-    text-align: center;
-    margin: 0 0 24px 0;
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #1e293b 0%, #4f46e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
-  /* コントロールパネルのカード化 */
+  .subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+    font-weight: 500;
+  }
+
+  /* コントロールパネル (グラスモルフィズム風) */
   #panel {
-    max-width: 900px;
-    margin: 0 auto 24px auto;
-    padding: 16px 20px;
+    max-width: 960px;
+    margin: 0 auto 28px auto;
+    padding: 20px 24px;
     background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    box-shadow: 
+      0 10px 25px -5px rgba(0, 0, 0, 0.05),
+      0 8px 10px -6px rgba(0, 0, 0, 0.01);
     display: flex;
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 20px;
     align-items: center;
     justify-content: center;
   }
@@ -47,15 +77,24 @@
   .panel-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+  }
+
+  .panel-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border-color);
   }
 
   label {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   /* カラーパレット */
@@ -64,16 +103,16 @@
     gap: 6px;
   }
   .color-dot {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     border: 2px solid #fff;
-    box-shadow: 0 0 0 1px var(--border-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     cursor: pointer;
-    transition: transform 0.15s;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
   .color-dot:hover {
-    transform: scale(1.15);
+    transform: scale(1.2);
   }
 
   input[type="color"] {
@@ -81,7 +120,7 @@
     border: none;
     width: 32px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     background: transparent;
   }
@@ -90,53 +129,70 @@
   }
   input[type="color"]::-webkit-color-swatch {
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   }
 
   /* ボタンデザイン */
   .btn {
-    padding: 8px 16px;
-    border-radius: 6px;
+    padding: 9px 18px;
+    border-radius: 8px;
     border: none;
     background: var(--primary);
     color: white;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .btn:hover {
     background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+  }
+  .btn:active {
+    transform: translateY(0);
   }
 
   .btn-outline {
-    background: #fff;
-    color: var(--text-color);
+    background: #ffffff;
+    color: var(--text-main);
     border: 1px solid var(--border-color);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
   .btn-outline:hover {
-    background: #f9fafb;
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
   .toggle-btn {
-    background: #6b7280;
+    background: #64748b;
+    box-shadow: 0 2px 4px rgba(100, 116, 139, 0.2);
   }
   .toggle-btn.active {
     background: #10b981;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
   }
 
-  /* 地図エリア */
+  /* 地図表示カード */
   #map {
-    width: 900px;
+    width: 960px;
     max-width: 100%;
     margin: 0 auto;
-    background: white;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.05),
+      0 8px 10px -6px rgba(0, 0, 0, 0.01);
     box-sizing: border-box;
-    transition: background 0.2s ease;
+    transition: background 0.3s ease;
+    border: 1px solid rgba(255,255,255,0.8);
   }
 
   #map svg {
@@ -147,32 +203,35 @@
 
   .prefecture {
     cursor: pointer;
-    transition: fill 0.15s ease, opacity 0.15s ease;
+    transition: fill 0.2s ease, opacity 0.2s ease, transform 0.1s ease;
   }
   .prefecture:hover {
-    opacity: 0.8;
+    opacity: 0.85;
   }
 
-  /* 県名表示スタイル */
+  /* 県名テキストのスタイル */
   .label {
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
     pointer-events: none;
-    fill: #1f2937;
+    fill: #1e293b;
     user-select: none;
     text-anchor: middle;
     dominant-baseline: central;
-    display: none; /* 初期OFF */
+    display: none; /* 初期非表示 */
   }
 </style>
 </head>
 <body>
 
-<h1>日本地図ぬりえツール</h1>
+<header>
+  <h1>日本地図ぬりえツール</h1>
+  <p class="subtitle">都道府県をタップしてお好みの色にカスタマイズ</p>
+</header>
 
 <div id="panel">
   <div class="panel-group">
-    <label for="colorPicker">塗る色:</label>
+    <label for="colorPicker">塗る色</label>
     <input type="color" id="colorPicker" value="#ef4444">
     <div class="color-presets">
       <div class="color-dot" style="background:#ef4444;" data-color="#ef4444"></div>
@@ -183,15 +242,24 @@
     </div>
   </div>
 
+  <div class="panel-divider"></div>
+
   <div class="panel-group">
-    <label for="bgColorPicker">背景色:</label>
+    <label for="bgColorPicker">背景色</label>
     <input type="color" id="bgColorPicker" value="#ffffff">
   </div>
+
+  <div class="panel-divider"></div>
 
   <button class="btn btn-outline" id="fillAllBtn">一括塗り</button>
   <button class="btn btn-outline" id="resetBtn">リセット</button>
   <button class="btn toggle-btn" id="labelToggleBtn">県名 表示</button>
-  <button class="btn" id="saveBtn">PNG画像保存</button>
+  
+  <div class="panel-divider"></div>
+
+  <!-- 画像保存ボタン（2種類） -->
+  <button class="btn btn-outline" id="saveTransparentBtn">透過PNG保存</button>
+  <button class="btn" id="saveBtn">背景あり保存</button>
 </div>
 
 <div id="map">読み込み中...</div>
@@ -199,7 +267,7 @@
 <script>
 const MAP_SVG_PATH = "map-full.svg";
 
-// 島が多い県や形状により中心がずれる県の位置補正オフセット（必要に応じて微調整）
+// 県名の表示オフセット補正値
 const LABEL_OFFSETS = {
   "沖縄": { x: 0, y: -10 },
   "長崎": { x: 10, y: 0 },
@@ -208,7 +276,7 @@ const LABEL_OFFSETS = {
   "北海道": { x: 10, y: 10 }
 };
 
-// 色文字列（#hex または rgb(...)）を統一的なHEXに変換・比較用ヘルパー
+// カラー文字列を判定用のHEXに統一変換
 function colorToHex(colorStr) {
   if (!colorStr) return "";
   if (colorStr.startsWith("#")) return colorStr.toLowerCase();
@@ -221,7 +289,6 @@ function colorToHex(colorStr) {
 window.addEventListener("DOMContentLoaded", async () => {
   const container = document.getElementById("map");
 
-  // SVGの読み込み
   try {
     const res = await fetch(MAP_SVG_PATH);
     const svgText = await res.text();
@@ -236,14 +303,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   const colorInput = document.getElementById("colorPicker");
   const bgColorInput = document.getElementById("bgColorPicker");
 
-  // パレットプリセット選択
+  // カラーパレットクリック
   document.querySelectorAll(".color-dot").forEach(dot => {
     dot.addEventListener("click", () => {
       colorInput.value = dot.dataset.color;
     });
   });
 
-  // ★ 県名テキストの自動生成（位置補正付き）
+  // 県名テキストの生成（位置補正付き）
   prefs.forEach(pref => {
     const titleEl = pref.querySelector("title");
     if (!titleEl) return;
@@ -271,12 +338,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const labels = container.querySelectorAll(".label");
 
-  // 背景色のリアルタイム変更
+  // 背景色のプレビュー更新
   bgColorInput.addEventListener("input", () => {
     container.style.background = bgColorInput.value;
   });
 
-  // ★ クリックで塗る / 同じ色なら消す（トグル処理）
+  // 都道府県クリックで塗り／消去の判定
   prefs.forEach(pref => {
     pref.addEventListener("click", e => {
       const current = e.currentTarget;
@@ -284,14 +351,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       const currentColorHex = colorToHex(current.style.fill);
 
       if (currentColorHex === selectedColorHex) {
-        current.style.fill = ""; // 色を削除（クリア）
+        current.style.fill = "";
       } else {
         current.style.fill = selectedColorHex;
       }
     });
   });
 
-  // ★ 県名 ON/OFF (初期表示はOFF)
+  // 県名 ON/OFF（初期値: OFF）
   const labelBtn = document.getElementById("labelToggleBtn");
   let labelVisible = false;
 
@@ -304,7 +371,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     labelBtn.classList.toggle("active", labelVisible);
   });
 
-  // 全体塗りつぶし
+  // 一括塗り
   document.getElementById("fillAllBtn").addEventListener("click", () => {
     const c = colorInput.value;
     prefs.forEach(p => p.style.fill = c);
@@ -317,8 +384,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     bgColorInput.value = "#ffffff";
   });
 
-  // ★ PNG保存（背景色描画に対応）
-  document.getElementById("saveBtn").addEventListener("click", () => {
+  // PNGダウンロード処理の汎用関数
+  const downloadPNG = (isTransparent) => {
     const serializer = new XMLSerializer();
     const svgStr = serializer.serializeToString(svg);
 
@@ -329,28 +396,38 @@ window.addEventListener("DOMContentLoaded", async () => {
     img.onload = () => {
       const vb = svg.viewBox.baseVal;
       const canvas = document.createElement("canvas");
-      canvas.width = vb.width || svg.clientWidth || 900;
+      canvas.width = vb.width || svg.clientWidth || 960;
       canvas.height = vb.height || svg.clientHeight || 700;
 
       const ctx = canvas.getContext("2d");
 
-      // 指定した背景色を塗る
-      ctx.fillStyle = bgColorInput.value;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // 透過でない場合のみ背景色を塗りつぶす
+      if (!isTransparent) {
+        ctx.fillStyle = bgColorInput.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
-      // SVG画像の描画
       ctx.drawImage(img, 0, 0);
-
       URL.revokeObjectURL(url);
 
       const pngUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
       a.href = pngUrl;
-      a.download = "japan-map.png";
+      a.download = isTransparent ? "japan-map-transparent.png" : "japan-map.png";
       a.click();
     };
 
     img.src = url;
+  };
+
+  // 背景あり保存
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    downloadPNG(false);
+  });
+
+  // 透過PNG保存
+  document.getElementById("saveTransparentBtn").addEventListener("click", () => {
+    downloadPNG(true);
   });
 });
 </script>
