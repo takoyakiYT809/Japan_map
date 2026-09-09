@@ -16,7 +16,6 @@
       --text-sub: #94a3b8;
       --accent: #38bdf8;
       --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-      --map-default-fill: #cbd5e1; /* 初期色の灰色 */
     }
 
     * {
@@ -37,7 +36,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* 画面切り替え管理 */
     .screen {
       display: none;
       width: 100%;
@@ -49,9 +47,7 @@
       display: flex;
     }
 
-    /* ----------------------------------
-       1. ホーム ＆ 地図選択画面
-    ---------------------------------- */
+    /* ホーム ＆ 地図選択画面 */
     .home-container {
       flex: 1;
       display: flex;
@@ -98,7 +94,6 @@
       margin-bottom: 40px;
     }
 
-    /* 地図選択カードエリア */
     .map-grid {
       display: flex;
       flex-direction: column;
@@ -167,9 +162,7 @@
       transform: translateX(4px);
     }
 
-    /* ----------------------------------
-       2. ぬりえメイン画面
-    ---------------------------------- */
+    /* ぬりえメイン画面 */
     header {
       background: rgba(15, 23, 42, 0.8);
       backdrop-filter: blur(10px);
@@ -210,7 +203,6 @@
       letter-spacing: -0.3px;
     }
 
-    /* Floating Palette Bar */
     .controls-bar {
       display: flex;
       align-items: center;
@@ -305,7 +297,6 @@
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
     }
 
-    /* メインキャンバス */
     main {
       flex: 1;
       position: relative;
@@ -345,11 +336,12 @@
       opacity: 0.8 !important;
     }
 
-    /* ツールチップ（残留バグ防止処理済） */
+    /* ツールチップ（残留バグ徹底ガード） */
     #tooltip {
       position: fixed;
       display: none;
-      background: rgba(15, 23, 42, 0.92);
+      opacity: 0;
+      background: rgba(15, 23, 42, 0.95);
       backdrop-filter: blur(8px);
       color: #ffffff;
       padding: 8px 14px;
@@ -360,6 +352,7 @@
       z-index: 9999;
       border: 1px solid var(--border);
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+      transition: opacity 0.1s ease;
     }
   </style>
 </head>
@@ -415,7 +408,6 @@
     <main>
       <div id="map-wrapper"></div>
 
-      <!-- Floating Tool Palette -->
       <div class="controls-bar">
         <div class="control-group">
           <span class="control-label">Paint</span>
@@ -485,13 +477,16 @@
     const wrapper = document.getElementById('map-wrapper');
     const tooltip = document.getElementById('tooltip');
 
-    // ツールチップ消去ヘルパー関数
+    // ツールチップ消去ガード
     function hideTooltip() {
+      tooltip.style.opacity = '0';
       tooltip.style.display = 'none';
       tooltip.innerText = '';
     }
 
-    // 画面遷移コントロール
+    // 全体イベントリスナーでツールチップの残留を防止
+    window.addEventListener('mouseup', hideTooltip);
+
     function startApp(mode, title) {
       hideTooltip();
       currentMapMode = mode;
@@ -559,18 +554,20 @@
           }
         }
 
-        // 初期色（灰色）
-        if (!el.getAttribute('fill')) {
-          el.setAttribute('fill', 'var(--map-default-fill)');
-          el.style.fill = 'var(--map-default-fill)';
-        }
+        // SVGごとの「最初の塗り色」をデータ属性に保存（色消し時の正確な復元用）
+        const computedStyle = window.getComputedStyle(el);
+        const originalFill = el.getAttribute('fill') || computedStyle.fill || '#cbd5e1';
+        el.setAttribute('data-default-fill', originalFill);
 
         // クリック時処理
         el.addEventListener('click', (e) => {
           e.stopPropagation();
+          hideTooltip();
 
           const isPainted = el.getAttribute('data-painted') === 'true';
           const currentPaintedColor = el.getAttribute('data-color');
+          
+          // 同じ色なら消去（＝最初の色へ復元）、違う色なら塗る
           const nextColor = (isPainted && currentPaintedColor === currentColor) ? null : currentColor;
 
           if (groupId) {
@@ -583,27 +580,32 @@
           applyColor(el, nextColor);
         });
 
-        // ホバーツールチップ
+        // ホバーツールチップ処理
         if (regionName) {
-          el.addEventListener('mouseenter', () => {
+          el.addEventListener('mouseenter', (e) => {
             tooltip.innerText = regionName;
             tooltip.style.display = 'block';
+            tooltip.style.opacity = '1';
+            tooltip.style.left = (e.clientX + 14) + 'px';
+            tooltip.style.top = (e.clientY + 14) + 'px';
           });
+          
           el.addEventListener('mousemove', (e) => {
             tooltip.style.left = (e.clientX + 14) + 'px';
             tooltip.style.top = (e.clientY + 14) + 'px';
           });
-          el.addEventListener('mouseleave', () => {
-            hideTooltip();
-          });
+          
+          el.addEventListener('mouseleave', hideTooltip);
         }
       });
     }
 
+    // 色適用処理（nullの場合は「SVG本来の初期色」に戻す）
     function applyColor(element, color) {
       if (!color) {
-        element.style.fill = 'var(--map-default-fill)';
-        element.setAttribute('fill', 'var(--map-default-fill)');
+        const defaultColor = element.getAttribute('data-default-fill') || '#cbd5e1';
+        element.style.fill = defaultColor;
+        element.setAttribute('fill', defaultColor);
         element.removeAttribute('data-painted');
         element.removeAttribute('data-color');
       } else {
@@ -615,6 +617,7 @@
     }
 
     function resetMapColors() {
+      hideTooltip();
       const svg = wrapper.querySelector('svg');
       if (!svg) return;
       svg.querySelectorAll('path, polygon, rect, circle').forEach(el => {
