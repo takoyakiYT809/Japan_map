@@ -473,7 +473,7 @@
       "Miyazaki": "宮崎県", "Kagoshima": "鹿児島県", "Okinawa": "沖縄県"
     };
 
-    // 2. 市区町村コード・IDマップ（都道府県ごとに定義）
+    // 2. 市区町村コード・IDマップ（大阪府の全区町村コードを追加）
     const cityDataMaps = {
       kyoto: {
         "JP26101": "京都市北区", "JP26102": "京都市上京区", "JP26103": "京都市左京区",
@@ -505,15 +505,29 @@
         "JP13229": "西東京市"
       },
       osaka: {
-        "JP27100": "大阪市", "JP27140": "堺市", "JP27202": "岸和田市", "JP27203": "豊中市",
-        "JP27204": "池田市", "JP27205": "吹田市", "JP27206": "泉大津市", "JP27207": "高槻市",
-        "JP27208": "貝塚市", "JP27209": "守口市", "JP27210": "枚方市", "JP27211": "茨木市",
-        "JP27212": "八尾市", "JP27213": "泉佐野市", "JP27214": "富田林市", "JP27215": "寝屋川市",
-        "JP27216": "河内長野市", "JP27217": "松原市", "JP27218": "大東市", "JP27219": "和泉市",
-        "JP27220": "箕面市", "JP27221": "柏原市", "JP27222": "羽曳野市", "JP27223": "門真市",
-        "JP27224": "摂津市", "JP27225": "高石市", "JP27226": "藤井寺市", "JP27227": "東大阪市",
-        "JP27228": "泉南市", "JP27229": "四條畷市", "JP27230": "交野市", "JP27231": "大阪狭山市",
-        "JP27232": "阪南市"
+        // 大阪市各区
+        "JP27102": "大阪市都島区", "JP27103": "大阪市福島区", "JP27104": "大阪市此花区",
+        "JP27106": "大阪市西区", "JP27107": "大阪市港区", "JP27108": "大阪市大正区",
+        "JP27109": "大阪市天王寺区", "JP27111": "大阪市浪速区", "JP27113": "大阪市西淀川区",
+        "JP27114": "大阪市東淀川区", "JP27115": "大阪市東成区", "JP27116": "大阪市生野区",
+        "JP27117": "大阪市旭区", "JP27118": "大阪市城東区", "JP27119": "大阪市阿倍野区",
+        "JP27120": "大阪市住吉区", "JP27121": "大阪市東住吉区", "JP27122": "大阪市西成区",
+        "JP27123": "大阪市淀川区", "JP27124": "大阪市鶴見区", "JP27125": "大阪市住之江区",
+        "JP27126": "大阪市平野区", "JP27127": "大阪市北区", "JP27128": "大阪市中央区",
+        // 堺市各区
+        "JP27141": "堺市堺区", "JP27142": "堺市中区", "JP27143": "堺市東区",
+        "JP27144": "堺市西区", "JP27145": "堺市南区", "JP27146": "堺市北区", "JP27147": "堺市美原区",
+        // その他市町村
+        "JP27202": "岸和田市", "JP27203": "豊中市", "JP27204": "池田市", "JP27205": "吹田市",
+        "JP27206": "泉大津市", "JP27207": "高槻市", "JP27208": "貝塚市", "JP27209": "守口市",
+        "JP27210": "枚方市", "JP27211": "茨木市", "JP27212": "八尾市", "JP27213": "泉佐野市",
+        "JP27214": "富田林市", "JP27215": "寝屋川市", "JP27216": "河内長野市", "JP27217": "松原市",
+        "JP27218": "大東市", "JP27219": "和泉市", "JP27220": "箕面市", "JP27221": "柏原市",
+        "JP27222": "羽曳野市", "JP27223": "門真市", "JP27224": "摂津市", "JP27225": "高石市",
+        "JP27226": "藤井寺市", "JP27227": "東大阪市", "JP27228": "泉南市", "JP27229": "四條畷市",
+        "JP27230": "交野市", "JP27231": "大阪狭山市", "JP27232": "阪南市", "JP27301": "島本町",
+        "JP27321": "豊能町", "JP27322": "能勢町", "JP27341": "忠岡町", "JP27361": "熊取町",
+        "JP27362": "田尻町", "JP27366": "岬町", "JP27381": "太子町", "JP27382": "河南町", "JP27383": "千早赤阪村"
       }
     };
 
@@ -538,7 +552,7 @@
     function goHome() {
       hideTooltip();
       document.getElementById('screen-app').classList.remove('active');
-      document.getElementById('screen-home').classList.add('active');
+      document.getElementById('screen-home').classList.active && document.getElementById('screen-home').classList.add('active');
     }
 
     function selectPaintColor(color, el) {
@@ -572,7 +586,7 @@
 
       elements.forEach(el => {
         const parentG = el.closest('g');
-        const groupId = (parentG && parentG.id) ? parentG.id : (el.id || el.getAttribute('data-code'));
+        const groupId = el.id || (parentG && parentG.id) || el.getAttribute('data-code');
 
         let rawName = el.getAttribute('name') || el.getAttribute('title') || el.getAttribute('data-name') ||
                       (parentG ? (parentG.getAttribute('name') || parentG.getAttribute('title') || parentG.getAttribute('id')) : null);
@@ -602,6 +616,7 @@
           const currentPaintedColor = el.getAttribute('data-color');
           const nextColor = (isPainted && currentPaintedColor === currentColor) ? null : currentColor;
 
+          // 同一IDを持つ島やグループを一括更新（人工島などの連動対応）
           if (groupId) {
             const sameGroup = svg.querySelectorAll(`[id="${groupId}"], [data-code="${groupId}"], g[id="${groupId}"] path`);
             if (sameGroup.length > 0) {
