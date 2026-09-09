@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>都道府県・市区町村 ぬりえ Studio Pro</title>
+  <title>都道府県・市区町村 ぬりえ Studio Ultra</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Noto+Sans+JP:wght@500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Noto+Sans+JP:wght@600;700;800&display=swap');
 
     :root {
-      --bg-main: #090d16;
-      --panel-bg: rgba(20, 27, 45, 0.75);
-      --panel-border: rgba(255, 255, 255, 0.08);
-      --panel-border-active: rgba(56, 189, 248, 0.4);
+      --bg-dark: #07090e;
+      --card-bg: rgba(18, 26, 43, 0.75);
+      --card-hover: rgba(30, 41, 67, 0.85);
+      --border: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(56, 189, 248, 0.5);
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
-      --accent-cyan: #38bdf8;
-      --accent-indigo: #818cf8;
-      --grad-accent: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
-      --shadow-glow: 0 0 25px rgba(56, 189, 248, 0.15);
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --grad-primary: linear-gradient(135deg, #38bdf8 0%, #6366f1 50%, #a855f7 100%);
+      --grad-card: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
     }
 
     * {
@@ -29,7 +30,7 @@
       font-family: 'Plus Jakarta Sans', 'Noto Sans JP', -apple-system, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: var(--bg-main);
+      background-color: var(--bg-dark);
       color: var(--text-main);
       height: 100vh;
       display: flex;
@@ -38,151 +39,176 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* ----------------------------------
+       画面切り替え ＆ アニメーション
+    ---------------------------------- */
     .screen {
       display: none;
       width: 100%;
       height: 100%;
       flex-direction: column;
-      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: screenFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .screen.active {
       display: flex;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.98); }
-      to { opacity: 1; transform: scale(1); }
+    @keyframes screenFadeIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     /* ----------------------------------
-       画面1: ホーム＆地図選択
+       画面1: 新・地図選択画面
     ---------------------------------- */
     .home-container {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 60px 20px;
+      padding: 50px 20px 80px;
       overflow-y: auto;
       background: 
-        radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12) 0%, transparent 60%),
-        radial-gradient(circle at 80% 100%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-        var(--bg-main);
+        radial-gradient(circle at 50% -10%, rgba(56, 189, 248, 0.18) 0%, transparent 50%),
+        radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+        var(--bg-dark);
     }
 
     .brand-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 16px;
+      gap: 8px;
+      padding: 8px 18px;
       border-radius: 99px;
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent);
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      margin-bottom: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-bottom: 16px;
       text-transform: uppercase;
+      box-shadow: 0 0 20px var(--accent-glow);
     }
 
     .home-title {
-      font-size: 42px;
+      font-size: 44px;
       font-weight: 800;
-      letter-spacing: -0.5px;
+      letter-spacing: -1px;
       margin: 0 0 12px 0;
-      background: var(--grad-accent);
+      background: var(--grad-primary);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      text-align: center;
     }
 
     .home-subtitle {
       color: var(--text-sub);
       font-size: 15px;
-      max-width: 480px;
+      max-width: 520px;
       line-height: 1.6;
-      margin-bottom: 48px;
+      margin-bottom: 40px;
       text-align: center;
     }
 
     .map-grid {
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 32px;
       width: 100%;
-      max-width: 720px;
+      max-width: 860px;
     }
 
     .category-group {
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--panel-border);
-      border-radius: 20px;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
     }
 
     .category-title {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 800;
       color: var(--text-sub);
       text-transform: uppercase;
       letter-spacing: 1.5px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .card-list {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
     }
 
     .map-card {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 18px 20px;
-      border-radius: 14px;
-      border: 1px solid var(--panel-border);
+      position: relative;
+      background: var(--grad-card);
+      padding: 22px 24px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-weight: 700;
-      font-size: 15px;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      font-weight: 800;
+      font-size: 16px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .map-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--grad-primary);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 0;
+    }
+
+    .map-card span {
+      position: relative;
+      z-index: 1;
     }
 
     .map-card:hover {
-      border-color: var(--panel-border-active);
-      background: rgba(56, 189, 248, 0.06);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-glow);
+      border-color: var(--border-accent);
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4), 0 0 25px var(--accent-glow);
+    }
+
+    .map-card:hover::before {
+      opacity: 0.12;
     }
 
     .map-card-arrow {
-      color: var(--text-sub);
       font-size: 18px;
-      transition: transform 0.2s, color 0.2s;
+      color: var(--text-sub);
+      transition: transform 0.3s ease, color 0.3s ease;
     }
 
     .map-card:hover .map-card-arrow {
-      color: var(--accent-cyan);
-      transform: translateX(4px);
+      color: var(--accent);
+      transform: translateX(6px);
     }
 
     /* ----------------------------------
-       画面2: ぬりえキャンバス
+       画面2: ぬりえメイン画面
     ---------------------------------- */
     header {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--panel-border);
-      padding: 14px 28px;
+      background: rgba(12, 17, 29, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -192,15 +218,15 @@
     .header-left {
       display: flex;
       align-items: center;
-      gap: 18px;
+      gap: 20px;
     }
 
     .back-btn {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--panel-border);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 8px 16px;
-      border-radius: 10px;
+      padding: 9px 18px;
+      border-radius: 12px;
       cursor: pointer;
       font-size: 13px;
       font-weight: 700;
@@ -208,60 +234,61 @@
     }
 
     .back-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateX(-2px);
     }
 
     .current-map-title {
       font-weight: 800;
-      font-size: 18px;
-      letter-spacing: -0.3px;
+      font-size: 20px;
+      letter-spacing: -0.5px;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .checkbox-label {
       font-size: 13px;
       cursor: pointer;
       color: var(--text-sub);
-      font-weight: 600;
+      font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 6px;
-      margin-right: 8px;
+      gap: 8px;
+      margin-right: 6px;
     }
 
     .btn {
-      padding: 9px 18px;
+      padding: 10px 20px;
       font-size: 13px;
-      font-weight: 700;
-      border-radius: 10px;
-      border: 1px solid var(--panel-border);
-      background: rgba(255, 255, 255, 0.05);
+      font-weight: 800;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text-main);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
     .btn:hover {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.15);
     }
 
     .btn-save {
-      background: var(--grad-accent);
+      background: var(--grad-primary);
       border: none;
       color: #ffffff;
-      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+      box-shadow: 0 4px 20px var(--accent-glow);
     }
 
     .btn-save:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+      opacity: 0.92;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5);
     }
 
     main {
@@ -281,43 +308,55 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background-color: var(--bg-main);
+      background-color: var(--bg-dark);
       transition: background-color 0.3s ease;
     }
 
+    /* ----------------------------------
+       SVG & 地図の判定改善
+    ---------------------------------- */
     svg {
-      width: 85%;
-      height: 85%;
-      max-width: 950px;
-      max-height: 720px;
-      filter: drop-shadow(0 15px 35px rgba(0,0,0,0.4));
+      width: 88%;
+      height: 88%;
+      max-width: 1000px;
+      max-height: 760px;
+      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
     }
 
     svg path, svg polygon, svg rect, svg circle {
       cursor: pointer;
-      transition: opacity 0.15s ease, fill 0.25s ease, stroke 0.2s ease;
-      stroke: rgba(255, 255, 255, 0.2);
-      stroke-width: 0.6;
+      pointer-events: visiblePainted; /* 線上のクリック判定を有効化 */
+      transition: transform 0.15s ease, fill 0.25s ease, stroke 0.2s ease, filter 0.2s ease;
+      stroke: #475569; /* 境界線を太く・くっきり指定 */
+      stroke-width: 1.2px;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transform-origin: center center;
     }
 
+    /* ホバー時の極太境界線＆強調アニメーション */
     svg path:hover, svg polygon:hover, svg rect:hover, svg circle:hover {
-      opacity: 0.85 !important;
-      stroke: #ffffff;
-      stroke-width: 1.2;
+      opacity: 0.95 !important;
+      stroke: #ffffff !important;
+      stroke-width: 2.2px !important;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+      z-index: 99;
     }
 
-    /* Floating Controls Bar */
+    /* ----------------------------------
+       フローティング操作バー
+    ---------------------------------- */
     .controls-bar {
       display: flex;
       align-items: center;
-      gap: 24px;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 12px 28px;
+      gap: 28px;
+      background: rgba(12, 17, 29, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      padding: 14px 32px;
       border-radius: 99px;
-      border: 1px solid var(--panel-border);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
       position: absolute;
       bottom: 32px;
       left: 50%;
@@ -328,104 +367,107 @@
     .control-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .control-label {
       font-size: 11px;
       color: var(--text-sub);
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
     }
 
     .palette {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
     }
 
     .color-btn {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.2);
       cursor: pointer;
-      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
     }
 
     .color-btn:hover {
-      transform: scale(1.18);
+      transform: scale(1.22);
     }
 
     .color-btn.selected {
       border-color: #ffffff;
-      transform: scale(1.25);
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+      transform: scale(1.3);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
     }
 
     .picker-wrapper {
       position: relative;
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       overflow: hidden;
-      border: 2px solid rgba(255, 255, 255, 0.2);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       cursor: pointer;
       background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+      transition: transform 0.2s;
+    }
+
+    .picker-wrapper:hover {
+      transform: scale(1.15);
     }
 
     .picker {
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
       opacity: 0;
       cursor: pointer;
     }
 
     .divider {
       width: 1px;
-      height: 24px;
-      background: var(--panel-border);
+      height: 28px;
+      background: var(--border);
     }
 
+    /* ツールチップ */
     #tooltip {
       position: fixed;
       display: none;
       opacity: 0;
-      background: rgba(15, 23, 42, 0.9);
-      backdrop-filter: blur(10px);
+      background: rgba(12, 17, 29, 0.92);
+      backdrop-filter: blur(12px);
       color: #ffffff;
       padding: 8px 16px;
       border-radius: 10px;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 800;
       pointer-events: none;
       z-index: 9999;
-      border: 1px solid var(--panel-border);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-      transition: opacity 0.15s ease;
+      border: 1px solid var(--border-accent);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 15px var(--accent-glow);
     }
   </style>
 </head>
 <body>
 
-  <!-- 画面1: ホーム＆地図選択 -->
+  <!-- 画面1: 地図選択 -->
   <div id="screen-home" class="screen active">
     <div class="home-container">
-      <div class="brand-badge">✨ Vector Map Studio</div>
+      <div class="brand-badge">✨ Interactive Map Studio</div>
       <h1 class="home-title">都道府県・市区町村 ぬりえ</h1>
-      <p class="home-subtitle">お好みのカラーで地域を塗り分けて、洗練されたグラフィック地図を簡単に作成・ダウンロードできます。</p>
+      <p class="home-subtitle">エリアを選択して自由にカラーリング。プレゼン資料やマップ画像として高画質出力できます。</p>
 
       <div class="map-grid">
         <div class="category-group">
           <div class="category-title">🗺️ 全国エリア</div>
           <div class="card-list">
             <div class="map-card" onclick="startApp('japan', 'japan-map.svg', '日本全国（47都道府県）')">
-              <span>日本全国 (47都道府県)</span>
+              <span>🇯🇵 日本全国 (47都道府県)</span>
               <span class="map-card-arrow">→</span>
             </div>
           </div>
@@ -435,7 +477,7 @@
           <div class="category-title">📍 関東エリア</div>
           <div class="card-list">
             <div class="map-card" onclick="startApp('tokyo', 'tokyo-map.svg', '東京都（全市区町村）')">
-              <span>東京都 (全市区町村)</span>
+              <span>🗼 東京都 (全市区町村)</span>
               <span class="map-card-arrow">→</span>
             </div>
           </div>
@@ -445,11 +487,11 @@
           <div class="category-title">📍 関西エリア</div>
           <div class="card-list">
             <div class="map-card" onclick="startApp('kyoto', 'kyoto-map.svg', '京都府（全市区町村）')">
-              <span>京都府 (全市区町村)</span>
+              <span>⛩️ 京都府 (全市区町村)</span>
               <span class="map-card-arrow">→</span>
             </div>
             <div class="map-card" onclick="startApp('osaka', 'osaka-map.svg', '大阪府（全市区町村）')">
-              <span>大阪府 (全市区町村)</span>
+              <span>🏯 大阪府 (全市区町村)</span>
               <span class="map-card-arrow">→</span>
             </div>
           </div>
@@ -458,19 +500,19 @@
     </div>
   </div>
 
-  <!-- 画面2: ぬりえキャンバス -->
+  <!-- 画面2: キャンバス -->
   <div id="screen-app" class="screen">
     <header>
       <div class="header-left">
-        <button class="back-btn" onclick="goHome()">← 地図選択</button>
+        <button class="back-btn" onclick="goHome()">← 地図選択に戻る</button>
         <div class="current-map-title" id="display-map-title">日本全国</div>
       </div>
       <div class="header-actions">
         <label class="checkbox-label">
-          <input type="checkbox" id="transparent-bg"> 透過PNG保存
+          <input type="checkbox" id="transparent-bg"> 透過PNGで保存
         </label>
-        <button class="btn" onclick="resetMapColors()">クリア</button>
-        <button class="btn btn-save" onclick="saveAsImage()">PNG保存</button>
+        <button class="btn" onclick="resetMapColors()">リセット</button>
+        <button class="btn btn-save" onclick="saveAsImage()">高画質PNG保存</button>
       </div>
     </header>
 
@@ -479,7 +521,7 @@
 
       <div class="controls-bar">
         <div class="control-group">
-          <span class="control-label">Paint</span>
+          <span class="control-label">Paint Color</span>
           <div class="palette">
             <div class="color-btn selected" style="background-color: #ef4444;" onclick="selectPaintColor('#ef4444', this)"></div>
             <div class="color-btn" style="background-color: #f59e0b;" onclick="selectPaintColor('#f59e0b', this)"></div>
@@ -487,7 +529,7 @@
             <div class="color-btn" style="background-color: #38bdf8;" onclick="selectPaintColor('#38bdf8', this)"></div>
             <div class="color-btn" style="background-color: #6366f1;" onclick="selectPaintColor('#6366f1', this)"></div>
             <div class="color-btn" style="background-color: #ec4899;" onclick="selectPaintColor('#ec4899', this)"></div>
-            <div class="picker-wrapper" title="カスタムカラー">
+            <div class="picker-wrapper" title="カスタムカラー選択">
               <input type="color" class="picker" value="#ef4444" onchange="selectPaintColor(this.value, null)">
             </div>
           </div>
@@ -496,14 +538,14 @@
         <div class="divider"></div>
 
         <div class="control-group">
-          <span class="control-label">Background</span>
+          <span class="control-label">Canvas Bg</span>
           <div class="palette">
-            <div class="color-btn" style="background-color: #090d16;" onclick="setCanvasBg('#090d16')"></div>
+            <div class="color-btn" style="background-color: #07090e;" onclick="setCanvasBg('#07090e')"></div>
             <div class="color-btn" style="background-color: #ffffff;" onclick="setCanvasBg('#ffffff')"></div>
             <div class="color-btn" style="background-color: #f1f5f9;" onclick="setCanvasBg('#f1f5f9')"></div>
             <div class="color-btn" style="background-color: #0f172a;" onclick="setCanvasBg('#0f172a')"></div>
             <div class="picker-wrapper" title="背景カスタム">
-              <input type="color" class="picker" value="#090d16" onchange="setCanvasBg(this.value)">
+              <input type="color" class="picker" value="#07090e" onchange="setCanvasBg(this.value)">
             </div>
           </div>
         </div>
@@ -628,10 +670,13 @@
           setupMapEvents();
         })
         .catch(() => {
-          wrapper.innerHTML = `<p style="color:#ef4444; font-weight:700;">${fileName} の読み込みに失敗しました。</p>`;
+          wrapper.innerHTML = `<p style="color:#ef4444; font-weight:800;">${fileName} の読み込みに失敗しました。</p>`;
         });
     }
 
+    // ----------------------------------
+    // 強力な島・飛び地一括判定ロジック
+    // ----------------------------------
     function setupMapEvents() {
       const svg = wrapper.querySelector('svg');
       if (!svg) return;
@@ -641,8 +686,10 @@
 
       elements.forEach(el => {
         const parentG = el.closest('g');
-        const rawId = el.id || (parentG ? parentG.id : null) || el.getAttribute('data-code');
-
+        
+        // 識別IDの一括取得 (id, data-code, class, 親のidなど)
+        const rawId = el.id || (parentG ? parentG.id : null) || el.getAttribute('data-code') || el.getAttribute('class');
+        
         let rawName = el.getAttribute('name') || el.getAttribute('title') || el.getAttribute('data-name') ||
                       (parentG ? (parentG.getAttribute('name') || parentG.getAttribute('title') || parentG.getAttribute('id')) : null);
 
@@ -671,15 +718,26 @@
           const currentPaintedColor = el.getAttribute('data-color');
           const nextColor = (isPainted && currentPaintedColor === currentColor) ? null : currentColor;
 
-          // 島・飛び地・関連要素の完全連動一括更新
+          // 島・飛び地・関連要素の全マルチ一括検索
+          let matchedElements = [];
+
           if (rawId) {
-            const sameGroup = svg.querySelectorAll(`[id="${rawId}"], [data-code="${rawId}"], g[id="${rawId}"] path, g[id="${rawId}"] polygon, g[id="${rawId}"] rect`);
-            if (sameGroup.length > 0) {
-              sameGroup.forEach(target => applyColor(target, nextColor));
-              return;
-            }
+            matchedElements = Array.from(svg.querySelectorAll(
+              `[id="${rawId}"], [data-code="${rawId}"], .${rawId}, g[id="${rawId}"] path, g[id="${rawId}"] polygon`
+            ));
           }
-          applyColor(el, nextColor);
+
+          if (matchedElements.length === 0 && rawName) {
+            matchedElements = Array.from(svg.querySelectorAll(
+              `[name="${rawName}"], [title="${rawName}"], [data-name="${rawName}"]`
+            ));
+          }
+
+          if (matchedElements.length > 0) {
+            matchedElements.forEach(target => applyColor(target, nextColor));
+          } else {
+            applyColor(el, nextColor);
+          }
         });
 
         if (regionName) {
@@ -748,7 +806,7 @@
 
       img.onload = () => {
         if (!isTransparent) {
-          ctx.fillStyle = wrapper.style.backgroundColor || '#090d16';
+          ctx.fillStyle = wrapper.style.backgroundColor || '#07090e';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
