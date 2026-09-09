@@ -1,509 +1,225 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>地図ぬりえツール</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap');
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>日本地図＆京都府 ぬりえWebアプリ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: #f4f4f9;
+    }
 
-  :root {
-    --primary: #4f46e5;
-    --primary-hover: #4338ca;
-    --bg-main: #f8fafc;
-    --card-bg: rgba(255, 255, 255, 0.9);
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --border-color: #e2e8f0;
-  }
+    /* モード切り替えボタン */
+    .view-switcher {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    .switch-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border: 2px solid #333;
+      background-color: #fff;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: 0.2s;
+    }
+    .switch-btn.active {
+      background-color: #333;
+      color: #fff;
+    }
 
-  body {
-    font-family: 'Plus Jakarta Sans', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-main);
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.05) 0px, transparent 50%);
-    background-attachment: fixed;
-    color: var(--text-main);
-    margin: 0;
-    padding: 40px 20px;
-    min-height: 100vh;
-    box-sizing: border-box;
-  }
+    /* パレット設定 */
+    .palette {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      background: #fff;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .color-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid #ccc;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .color-btn.selected {
+      border: 3px solid #000;
+      transform: scale(1.15);
+    }
 
-  header {
-    text-align: center;
-    margin-bottom: 24px;
-  }
+    /* マップ表示エリア */
+    #map-container {
+      width: 100%;
+      max-width: 800px;
+      background: #ffffff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-sizing: border-box;
+    }
 
-  h1 {
-    font-size: 32px;
-    font-weight: 800;
-    margin: 0 0 8px 0;
-    letter-spacing: -0.02em;
-    background: linear-gradient(135deg, #1e293b 0%, #4f46e5 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
+    /* SVG内部の設定 */
+    svg {
+      width: 100%;
+      height: auto;
+      max-height: 70vh;
+    }
+    svg path, svg g {
+      cursor: pointer;
+      transition: fill 0.2s ease;
+    }
+    svg path:hover, svg g:hover {
+      opacity: 0.8;
+    }
 
-  .subtitle {
-    font-size: 14px;
-    color: var(--text-muted);
-    margin: 0;
-    font-weight: 500;
-  }
-
-  /* 地図切り替えタブ */
-  .tab-container {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-
-  .tab-btn {
-    padding: 10px 24px;
-    border-radius: 30px;
-    border: 1px solid var(--border-color);
-    background: #ffffff;
-    color: var(--text-muted);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-  }
-
-  .tab-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-
-  .tab-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
-  }
-
-  /* コントロールパネル */
-  #panel {
-    max-width: 960px;
-    margin: 0 auto 28px auto;
-    padding: 20px 24px;
-    background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 16px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .panel-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .panel-divider {
-    width: 1px;
-    height: 28px;
-    background: var(--border-color);
-  }
-
-  label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-muted);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    text-transform: uppercase;
-  }
-
-  .color-presets {
-    display: flex;
-    gap: 6px;
-  }
-  .color-dot {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  .color-dot:hover {
-    transform: scale(1.2);
-  }
-
-  input[type="color"] {
-    -webkit-appearance: none;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    cursor: pointer;
-    background: transparent;
-  }
-  input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-  input[type="color"]::-webkit-color-swatch {
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-  }
-
-  .btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
-    background: var(--primary);
-    color: white;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 700;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-  }
-  .btn:hover {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-  }
-
-  .btn-outline {
-    background: #ffffff;
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-  }
-  .btn-outline:hover {
-    background: #f8fafc;
-  }
-
-  .toggle-btn {
-    background: #64748b;
-  }
-  .toggle-btn.active {
-    background: #10b981;
-  }
-
-  /* 地図エリア */
-  #map {
-    max-width: 900px;
-    margin: 0 auto;
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-    box-sizing: border-box;
-    transition: background 0.3s ease;
-  }
-
-  #map svg {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  .clickable-area {
-    cursor: pointer;
-    transition: fill 0.2s ease, opacity 0.2s ease;
-  }
-  .clickable-area:hover {
-    opacity: 0.8;
-  }
-
-  .label {
-    font-size: 11px;
-    font-weight: 700;
-    pointer-events: none;
-    fill: #1e293b;
-    user-select: none;
-    text-anchor: middle;
-    dominant-baseline: central;
-    display: none;
-  }
-</style>
+    /* ツールチップ */
+    #tooltip {
+      position: absolute;
+      display: none;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      pointer-events: none;
+      z-index: 1000;
+    }
+  </style>
 </head>
 <body>
 
-<header>
-  <h1>地図ぬりえツール</h1>
-  <p class="subtitle">タップ・クリックしてお好みの色にカスタマイズ</p>
-</header>
+  <h1>地図ぬりえWebアプリ</h1>
 
-<!-- ★ 地図切替タブ -->
-<div class="tab-container">
-  <button class="tab-btn active" data-map="japan">全国（都道府県）</button>
-  <button class="tab-btn" data-map="kyoto">京都府（市町村）</button>
-</div>
-
-<div id="panel">
-  <div class="panel-group">
-    <label for="colorPicker">塗る色</label>
-    <input type="color" id="colorPicker" value="#ef4444">
-    <div class="color-presets">
-      <div class="color-dot" style="background:#ef4444;" data-color="#ef4444"></div>
-      <div class="color-dot" style="background:#3b82f6;" data-color="#3b82f6"></div>
-      <div class="color-dot" style="background:#10b981;" data-color="#10b981"></div>
-      <div class="color-dot" style="background:#f59e0b;" data-color="#f59e0b"></div>
-      <div class="color-dot" style="background:#8b5cf6;" data-color="#8b5cf6"></div>
-    </div>
+  <!-- 地図切り替えボタン -->
+  <div class="view-switcher">
+    <button class="switch-btn active" onclick="switchMap('japan')">日本地図</button>
+    <button class="switch-btn" onclick="switchMap('kyoto')">京都府（詳細）</button>
   </div>
 
-  <div class="panel-divider"></div>
-
-  <div class="panel-group">
-    <label for="bgColorPicker">背景色</label>
-    <input type="color" id="bgColorPicker" value="#ffffff">
+  <!-- パレット（カラー選択） -->
+  <div class="palette">
+    <div class="color-btn selected" style="background-color: #ff4d4f;" onclick="selectColor('#ff4d4f', this)"></div>
+    <div class="color-btn" style="background-color: #ffec3d;" onclick="selectColor('#ffec3d', this)"></div>
+    <div class="color-btn" style="background-color: #73d13d;" onclick="selectColor('#73d13d', this)"></div>
+    <div class="color-btn" style="background-color: #40a9ff;" onclick="selectColor('#40a9ff', this)"></div>
+    <div class="color-btn" style="background-color: #9254de;" onclick="selectColor('#9254de', this)"></div>
+    <div class="color-btn" style="background-color: #ffffff;" onclick="selectColor('#ffffff', this)" title="消しゴム（白）"></div>
   </div>
 
-  <div class="panel-divider"></div>
-
-  <button class="btn btn-outline" id="fillAllBtn">一括塗り</button>
-  <button class="btn btn-outline" id="resetBtn">リセット</button>
-  <button class="btn toggle-btn" id="labelToggleBtn">地名 表示</button>
+  <div id="map-container">
+    <!-- ここに選択したSVGが挿入されます -->
+  </div>
   
-  <div class="panel-divider"></div>
+  <div id="tooltip"></div>
 
-  <button class="btn btn-outline" id="saveTransparentBtn">透過PNG保存</button>
-  <button class="btn" id="saveBtn">背景あり保存</button>
-</div>
+  <script>
+    // 現在選択されている色（初期値：赤）
+    let currentColor = '#ff4d4f';
+    let currentMapMode = 'japan';
 
-<div id="map">読み込み中...</div>
-
-<script>
-// 設定データ
-const MAP_CONFIGS = {
-  japan: {
-    path: "japan-map.svg",
-    offsets: { "沖縄": { x: 0, y: -10 }, "長崎": { x: 10, y: 0 }, "鹿児島": { x: 5, y: -5 }, "東京": { x: -10, y: -10 }, "北海道": { x: 10, y: 10 } }
-  },
-  kyoto: {
-    path: "kyoto-map.svg",
-    offsets: { "京都市": { x: 0, y: 15 }, "南丹市": { x: 0, y: -10 } }
-  }
-};
-
-let currentMapType = "japan";
-let currentTargets = [];
-let labelVisible = false;
-
-function colorToHex(colorStr) {
-  if (!colorStr) return "";
-  if (colorStr.startsWith("#")) return colorStr.toLowerCase();
-  const ctx = document.createElement("canvas").getContext("2d");
-  ctx.fillStyle = colorStr;
-  return ctx.fillStyle.toLowerCase();
-}
-
-// 地図の読み込みと初期化
-async function loadMap(type) {
-  currentMapType = type;
-  const container = document.getElementById("map");
-  const config = MAP_CONFIGS[type];
-  currentTargets = [];
-
-  try {
-    const res = await fetch(config.path);
-    const svgText = await res.text();
-    container.innerHTML = svgText;
-  } catch (err) {
-    container.innerHTML = "地図データの読み込みに失敗しました。ファイル名を確認してください。";
-    return;
-  }
-
-  const svg = container.querySelector("svg");
-  const colorInput = document.getElementById("colorPicker");
-
-  // モードごとの読み込み処理
-  if (type === "japan") {
-    const prefs = container.querySelectorAll(".prefecture");
-    prefs.forEach(pref => {
-      pref.classList.add("clickable-area");
-      currentTargets.push(pref);
-
-      const titleEl = pref.querySelector("title");
-      if (!titleEl) return;
-      const jp = titleEl.textContent.trim().split("/")[0].trim();
-
-      createLabel(pref, jp, config.offsets[jp]);
-    });
-  } else if (type === "kyoto") {
-    const links = container.querySelectorAll("a");
-    links.forEach(a => {
-      const href = a.getAttribute("xlink:href") || a.getAttribute("href") || "";
-      const use = a.querySelector("use");
-      if (!use) return;
-
-      const cityName = href.split("/").pop();
-      const otherPrefs = ["福井県", "三重県", "滋賀県", "大阪府", "兵庫県", "奈良県"];
-      
-      if (otherPrefs.includes(cityName)) {
-        use.style.pointerEvents = "none";
-        return;
-      }
-
-      use.classList.add("clickable-area");
-      currentTargets.push(use);
-      a.addEventListener("click", e => e.preventDefault());
-
-      createLabel(a, cityName, config.offsets[cityName], use);
-    });
-  }
-
-  // 地名の初期表示状態を保持
-  updateLabelVisibility();
-
-  // クリックイベントの設定
-  currentTargets.forEach(target => {
-    target.addEventListener("click", e => {
-      e.preventDefault();
-      const selectedHex = colorToHex(colorInput.value);
-      const currentHex = colorToHex(target.style.fill || target.getAttribute("fill"));
-
-      if (currentHex === selectedHex) {
-        target.style.fill = "";
-        target.removeAttribute("fill");
-      } else {
-        target.style.fill = selectedHex;
-        target.setAttribute("fill", selectedHex);
-      }
-    });
-  });
-}
-
-// 地名ラベル生成
-function createLabel(parentEl, textStr, offset, targetGeoEl = null) {
-  try {
-    const geoEl = targetGeoEl || parentEl;
-    const bbox = geoEl.getBBox();
-    let cx = bbox.x + bbox.width / 2;
-    let cy = bbox.y + bbox.height / 2;
-
-    if (offset) {
-      cx += offset.x;
-      cy += offset.y;
-    }
-
-    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    text.setAttribute("class", "label");
-    text.setAttribute("x", cx);
-    text.setAttribute("y", cy);
-    text.textContent = textStr;
-
-    parentEl.appendChild(text);
-  } catch(e) {}
-}
-
-function updateLabelVisibility() {
-  const labels = document.querySelectorAll(".label");
-  labels.forEach(l => {
-    l.style.display = labelVisible ? "inline" : "none";
-  });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  const colorInput = document.getElementById("colorPicker");
-  const bgColorInput = document.getElementById("bgColorPicker");
-
-  // 初期ロード
-  loadMap("japan");
-
-  // タブ切り替え
-  document.querySelectorAll(".tab-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-      e.target.classList.add("active");
-      loadMap(e.target.dataset.map);
-    });
-  });
-
-  // パレット選択
-  document.querySelectorAll(".color-dot").forEach(dot => {
-    dot.addEventListener("click", () => {
-      colorInput.value = dot.dataset.color;
-    });
-  });
-
-  // 背景色リアルタイム変更
-  bgColorInput.addEventListener("input", () => {
-    document.getElementById("map").style.background = bgColorInput.value;
-  });
-
-  // 地名 ON/OFF
-  const labelBtn = document.getElementById("labelToggleBtn");
-  labelBtn.addEventListener("click", () => {
-    labelVisible = !labelVisible;
-    updateLabelVisibility();
-    labelBtn.textContent = labelVisible ? "地名 非表示" : "地名 表示";
-    labelBtn.classList.toggle("active", labelVisible);
-  });
-
-  // 一括塗り
-  document.getElementById("fillAllBtn").addEventListener("click", () => {
-    const c = colorInput.value;
-    currentTargets.forEach(t => {
-      t.style.fill = c;
-      t.setAttribute("fill", c);
-    });
-  });
-
-  // リセット
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    currentTargets.forEach(t => {
-      t.style.fill = "";
-      t.removeAttribute("fill");
-    });
-    document.getElementById("map").style.background = "#ffffff";
-    bgColorInput.value = "#ffffff";
-  });
-
-  // PNG画像保存
-  const downloadPNG = (isTransparent) => {
-    const svg = document.querySelector("#map svg");
-    if (!svg) return;
-
-    const serializer = new XMLSerializer();
-    const svgStr = serializer.serializeToString(svg);
-
-    const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = svg.clientWidth || 900;
-      canvas.height = svg.clientHeight || 700;
-
-      const ctx = canvas.getContext("2d");
-
-      if (!isTransparent) {
-        ctx.fillStyle = bgColorInput.value;
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-
-      ctx.drawImage(img, 0, 0);
-      URL.revokeObjectURL(url);
-
-      const pngUrl = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = pngUrl;
-      a.download = `${currentMapType}-map${isTransparent ? "-transparent" : ""}.png`;
-      a.click();
+    // JISコードと市町村名の対応リスト（京都府用）
+    const kyotoCityMap = {
+      "JP26101": "京都市北区", "JP26102": "京都市上京区", "JP26103": "京都市左京区",
+      "JP26104": "京都市中京区", "JP26105": "京都市東山区", "JP26106": "京都市下京区",
+      "JP26107": "京都市南区", "JP26108": "京都市右京区", "JP26109": "京都市伏見区",
+      "JP26110": "京都市山科区", "JP26111": "京都市西京区", "JP26201": "福知山市",
+      "JP26202": "舞鶴市", "JP26203": "綾部市", "JP26204": "宇治市",
+      "JP26205": "宮津市", "JP26206": "城陽市", "JP26207": "向日市",
+      "JP26208": "長岡京市", "JP26209": "八幡市", "JP26210": "京田辺市",
+      "JP26211": "京丹後市", "JP26212": "南丹市", "JP26213": "木津川市",
+      "JP26214": "大山崎町", "JP26303": "久御山町", "JP26322": "井手町",
+      "JP26343": "宇治田原町", "JP26364": "笠置町", "JP26365": "和束町",
+      "JP26366": "精華町", "JP26367": "南山城村", "JP26407": "京丹波町",
+      "JP26463": "伊根町", "JP26465": "与謝野町"
     };
 
-    img.src = url;
-  };
+    const container = document.getElementById('map-container');
+    const tooltip = document.getElementById('tooltip');
 
-  document.getElementById("saveBtn").addEventListener("click", () => downloadPNG(false));
-  document.getElementById("saveTransparentBtn").addEventListener("click", () => downloadPNG(true));
-});
-</script>
+    // 色を選択する関数
+    function selectColor(color, el) {
+      currentColor = color;
+      document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+      el.classList.add('selected');
+    }
 
+    // 地図切り替え関数
+    function switchMap(mode) {
+      currentMapMode = mode;
+      
+      // ボタンの見た目更新
+      const btns = document.querySelectorAll('.switch-btn');
+      btns.forEach(btn => btn.classList.remove('active'));
+      if (mode === 'japan') btns[0].classList.add('active');
+      if (mode === 'kyoto') btns[1].classList.add('active');
+
+      // SVGファイルの読み分け
+      const fileName = (mode === 'japan') ? 'japan-map.svg' : 'kyoto-map.svg';
+
+      fetch(fileName)
+        .then(res => res.text())
+        .then(svgText => {
+          container.innerHTML = svgText;
+          initPaintEvents();
+        })
+        .catch(err => {
+          container.innerHTML = `<p style="color:red;">${fileName} の読み込みに失敗しました。</p>`;
+        });
+    }
+
+    // ぬりえ＆ホバー処理の初期化
+    function initPaintEvents() {
+      // 全てのpath要素、またはJISコードを持つg要素を取得
+      const elements = container.querySelectorAll('path, [id^="JP26"]');
+
+      elements.forEach(el => {
+        // ツールチップに表示する名前の判定
+        let name = el.getAttribute('name') || el.getAttribute('title') || el.getAttribute('id');
+        if (currentMapMode === 'kyoto') {
+          const id = el.getAttribute('id');
+          if (kyotoCityMap[id]) name = kyotoCityMap[id];
+        }
+
+        // 塗りつぶし（クリック）
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          el.setAttribute('fill', currentColor);
+          // グループ化されている場合、中のpath全ても塗る
+          el.querySelectorAll('path').forEach(p => p.setAttribute('fill', currentColor));
+        });
+
+        // ツールチップ表示
+        if (name) {
+          el.addEventListener('mouseenter', () => {
+            tooltip.innerText = name;
+            tooltip.style.display = 'block';
+          });
+          el.addEventListener('mousemove', (e) => {
+            tooltip.style.left = (e.pageX + 15) + 'px';
+            tooltip.style.top = (e.pageY + 15) + 'px';
+          });
+          el.addEventListener('mouseleave', () => {
+            tooltip.style.display = 'none';
+          });
+        }
+      });
+    }
+
+    // 初期表示（日本地図）
+    switchMap('japan');
+  </script>
 </body>
 </html>
