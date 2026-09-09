@@ -102,6 +102,25 @@
 <script>
 const MAP_SVG_PATH = "map-full.svg";
 
+// 県名ごとの位置補正（px）
+// 数値は「だいたい」の初期値なので、見ながら調整してOK
+const labelOffsets = {
+  "東京":    { dx:  40, dy: -40 },
+  "鹿児島":  { dx:  20, dy: -40 },
+  "茨城":    { dx:  10, dy: -20 },
+  "岐阜":    { dx:   0, dy: -20 },
+  "和歌山":  { dx:   0, dy: -20 },
+  "静岡":    { dx:   0, dy: -20 },
+  "石川":    { dx:   0, dy: -20 },
+  "北海道":  { dx: -60, dy:   0 },
+  "青森":    { dx:   0, dy:  20 },
+  "兵庫":    { dx:   0, dy: -20 },
+  "高知":    { dx:   0, dy: -20 },
+  "熊本":    { dx:  20, dy:   0 },
+  "長崎":    { dx:  10, dy:  20 },
+  "新潟":    { dx: -20, dy:   0 },
+};
+
 window.addEventListener("DOMContentLoaded", async () => {
   const container = document.getElementById("map");
 
@@ -116,19 +135,23 @@ window.addEventListener("DOMContentLoaded", async () => {
   const colorInput = document.getElementById("colorPicker");
   const bgColorInput = document.getElementById("bgColorPicker");
 
-  // ★ 県名テキストを自動生成して追加
+  // ★ 県名テキストを自動生成＋ズレ補正
   prefs.forEach(pref => {
     const titleEl = pref.querySelector("title");
     if (!titleEl) return;
 
-    // 「沖縄 / Okinawa」→「沖縄」
     const raw = titleEl.textContent.trim();
-    const jp = raw.split("/")[0].trim();
+    const jp = raw.split("/")[0].trim(); // 「沖縄 / Okinawa」→「沖縄」
 
-    // 形の中心座標を計算
     const bbox = pref.getBBox();
-    const cx = bbox.x + bbox.width / 2;
-    const cy = bbox.y + bbox.height / 2;
+    let cx = bbox.x + bbox.width / 2;
+    let cy = bbox.y + bbox.height / 2;
+
+    // ズレ補正が登録されていれば適用
+    if (labelOffsets[jp]) {
+      cx += labelOffsets[jp].dx;
+      cy += labelOffsets[jp].dy;
+    }
 
     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
     text.setAttribute("class", "label");
@@ -202,7 +225,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       canvas.height = vb.height;
 
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0); // 透過背景のまま描画
+      ctx.drawImage(img, 0, 0);
 
       URL.revokeObjectURL(url);
 
