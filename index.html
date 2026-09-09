@@ -3,134 +3,268 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日本地図＆京都府 ぬりえWebアプリ</title>
+  <title>地図ぬりえアプリ</title>
   <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --accent-color: #38bdf8;
+      --border-color: #334155;
+    }
+
     body {
-      font-family: sans-serif;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
       margin: 0;
       padding: 20px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       display: flex;
       flex-direction: column;
       align-items: center;
-      background-color: #f4f4f9;
+      min-height: 100vh;
     }
 
-    /* モード切り替えボタン */
-    .view-switcher {
-      margin-bottom: 15px;
-      display: flex;
-      gap: 10px;
-    }
-    .switch-btn {
-      padding: 10px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      border: 2px solid #333;
-      background-color: #fff;
-      cursor: pointer;
-      border-radius: 6px;
-      transition: 0.2s;
-    }
-    .switch-btn.active {
-      background-color: #333;
-      color: #fff;
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
     }
 
-    /* パレット設定 */
-    .palette {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-      background: #fff;
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .color-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 2px solid #ccc;
-      cursor: pointer;
-      transition: transform 0.1s;
-    }
-    .color-btn.selected {
-      border: 3px solid #000;
-      transform: scale(1.15);
-    }
-
-    /* マップ表示エリア */
-    #map-container {
+    /* メインコンテナ */
+    .app-container {
       width: 100%;
-      max-width: 800px;
-      background: #ffffff;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      max-width: 900px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
       box-sizing: border-box;
     }
 
-    /* SVG内部の設定 */
+    /* ツールバーエリア */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    /* モード切り替えセグメント */
+    .segmented-control {
+      display: flex;
+      background: var(--bg-color);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .segmented-btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .segmented-btn.active {
+      background: var(--accent-color);
+      color: #0f172a;
+    }
+
+    /* パレット＆コントローラー */
+    .controls-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .control-label {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .palette {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+      position: relative;
+    }
+
+    .color-btn:hover {
+      transform: scale(1.15);
+    }
+
+    .color-btn.selected {
+      border-color: #fff;
+      transform: scale(1.2);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+    }
+
+    .color-picker-input {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      background: transparent;
+    }
+
+    /* アクションボタン */
+    .btn-action {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #334155;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: #475569;
+    }
+
+    .btn-save {
+      background: #10b981;
+      border-color: #059669;
+      color: #fff;
+    }
+
+    .btn-save:hover {
+      background: #059669;
+    }
+
+    /* 地図描画エリア */
+    #map-wrapper {
+      width: 100%;
+      border-radius: 12px;
+      background-color: #ffffff;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 450px;
+      transition: background-color 0.3s ease;
+    }
+
     svg {
       width: 100%;
       height: auto;
-      max-height: 70vh;
+      max-height: 65vh;
     }
-    svg path, svg g {
+
+    svg path, svg polygon, svg rect, svg circle {
       cursor: pointer;
-      transition: fill 0.2s ease;
+      transition: fill 0.15s ease;
     }
-    svg path:hover, svg g:hover {
-      opacity: 0.8;
+
+    svg path:hover, svg polygon:hover, svg g:hover path {
+      opacity: 0.75;
     }
 
     /* ツールチップ */
     #tooltip {
       position: absolute;
       display: none;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(15, 23, 42, 0.9);
       color: #fff;
       padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
       pointer-events: none;
       z-index: 1000;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
   </style>
 </head>
 <body>
 
-  <h1>地図ぬりえWebアプリ</h1>
+  <h1>地図ぬりえ Studio</h1>
 
-  <!-- 地図切り替えボタン -->
-  <div class="view-switcher">
-    <button class="switch-btn active" onclick="switchMap('japan')">日本地図</button>
-    <button class="switch-btn" onclick="switchMap('kyoto')">京都府（詳細）</button>
+  <div class="app-container">
+    <div class="toolbar">
+      <!-- 地図切り替え -->
+      <div class="segmented-control">
+        <button class="segmented-btn active" onclick="switchMap('japan')">日本全国</button>
+        <button class="segmented-btn" onclick="switchMap('kyoto')">京都府詳細</button>
+      </div>
+
+      <!-- アクションボタン -->
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-action" onclick="resetMapColors()">色クリア</button>
+        <button class="btn-action btn-save" onclick="saveAsImage()">画像保存 (PNG)</button>
+      </div>
+    </div>
+
+    <div class="toolbar" style="border-bottom: none; padding-bottom: 0;">
+      <!-- 着色カラーパレット -->
+      <div>
+        <span class="control-label">塗りつぶし色 / 消しゴム</span>
+        <div class="palette">
+          <div class="color-btn selected" style="background-color: #ef4444;" onclick="selectPaintColor('#ef4444', this)"></div>
+          <div class="color-btn" style="background-color: #f59e0b;" onclick="selectPaintColor('#f59e0b', this)"></div>
+          <div class="color-btn" style="background-color: #10b981;" onclick="selectPaintColor('#10b981', this)"></div>
+          <div class="color-btn" style="background-color: #3b82f6;" onclick="selectPaintColor('#3b82f6', this)"></div>
+          <div class="color-btn" style="background-color: #8b5cf6;" onclick="selectPaintColor('#8b5cf6', this)"></div>
+          <div class="color-btn" style="background-color: #ffffff;" onclick="selectPaintColor('#ffffff', this)" title="消しゴム（白）"></div>
+          <!-- 自由色選択 -->
+          <input type="color" class="color-picker-input" value="#ef4444" onchange="selectPaintColor(this.value, null)" title="好きな色を選択">
+        </div>
+      </div>
+
+      <!-- 背景色パレット -->
+      <div>
+        <span class="control-label">マップ背景色</span>
+        <div class="palette">
+          <div class="color-btn" style="background-color: #ffffff;" onclick="setCanvasBg('#ffffff')"></div>
+          <div class="color-btn" style="background-color: #f1f5f9;" onclick="setCanvasBg('#f1f5f9')"></div>
+          <div class="color-btn" style="background-color: #e0f2fe;" onclick="setCanvasBg('#e0f2fe')"></div>
+          <div class="color-btn" style="background-color: #0f172a;" onclick="setCanvasBg('#0f172a')"></div>
+          <input type="color" class="color-picker-input" value="#ffffff" onchange="setCanvasBg(this.value)" title="好きな背景色を選択">
+        </div>
+      </div>
+    </div>
+
+    <!-- 地図領域 -->
+    <div id="map-wrapper">
+      <!-- SVG読み込み位置 -->
+    </div>
   </div>
 
-  <!-- パレット（カラー選択） -->
-  <div class="palette">
-    <div class="color-btn selected" style="background-color: #ff4d4f;" onclick="selectColor('#ff4d4f', this)"></div>
-    <div class="color-btn" style="background-color: #ffec3d;" onclick="selectColor('#ffec3d', this)"></div>
-    <div class="color-btn" style="background-color: #73d13d;" onclick="selectColor('#73d13d', this)"></div>
-    <div class="color-btn" style="background-color: #40a9ff;" onclick="selectColor('#40a9ff', this)"></div>
-    <div class="color-btn" style="background-color: #9254de;" onclick="selectColor('#9254de', this)"></div>
-    <div class="color-btn" style="background-color: #ffffff;" onclick="selectColor('#ffffff', this)" title="消しゴム（白）"></div>
-  </div>
-
-  <div id="map-container">
-    <!-- ここに選択したSVGが挿入されます -->
-  </div>
-  
   <div id="tooltip"></div>
 
   <script>
-    // 現在選択されている色（初期値：赤）
-    let currentColor = '#ff4d4f';
+    let currentPaintColor = '#ef4444';
     let currentMapMode = 'japan';
 
-    // JISコードと市町村名の対応リスト（京都府用）
     const kyotoCityMap = {
       "JP26101": "京都市北区", "JP26102": "京都市上京区", "JP26103": "京都市左京区",
       "JP26104": "京都市中京区", "JP26105": "京都市東山区", "JP26106": "京都市下京区",
@@ -146,65 +280,70 @@
       "JP26463": "伊根町", "JP26465": "与謝野町"
     };
 
-    const container = document.getElementById('map-container');
+    const wrapper = document.getElementById('map-wrapper');
     const tooltip = document.getElementById('tooltip');
 
-    // 色を選択する関数
-    function selectColor(color, el) {
-      currentColor = color;
-      document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
-      el.classList.add('selected');
+    // 塗り色の選択
+    function selectPaintColor(color, el) {
+      currentPaintColor = color;
+      document.querySelectorAll('.palette .color-btn').forEach(btn => btn.classList.remove('selected'));
+      if (el) el.classList.add('selected');
     }
 
-    // 地図切り替え関数
+    // キャンバス背景色の変更
+    function setCanvasBg(color) {
+      wrapper.style.backgroundColor = color;
+    }
+
+    // 地図の切り替え
     function switchMap(mode) {
       currentMapMode = mode;
       
-      // ボタンの見た目更新
-      const btns = document.querySelectorAll('.switch-btn');
+      const btns = document.querySelectorAll('.segmented-btn');
       btns.forEach(btn => btn.classList.remove('active'));
       if (mode === 'japan') btns[0].classList.add('active');
       if (mode === 'kyoto') btns[1].classList.add('active');
 
-      // SVGファイルの読み分け
       const fileName = (mode === 'japan') ? 'japan-map.svg' : 'kyoto-map.svg';
 
       fetch(fileName)
         .then(res => res.text())
         .then(svgText => {
-          container.innerHTML = svgText;
-          initPaintEvents();
+          wrapper.innerHTML = svgText;
+          setupPaintAndHoverEvents();
         })
-        .catch(err => {
-          container.innerHTML = `<p style="color:red;">${fileName} の読み込みに失敗しました。</p>`;
+        .catch(() => {
+          wrapper.innerHTML = `<p style="color:#ef4444; font-weight:bold;">${fileName} の読み込みに失敗しました。</p>`;
         });
     }
 
-    // ぬりえ＆ホバー処理の初期化
-    function initPaintEvents() {
-      // 全てのpath要素、またはJISコードを持つg要素を取得
-      const elements = container.querySelectorAll('path, [id^="JP26"]');
+    // イベント設定（色塗り・ホバー）
+    function setupPaintAndHoverEvents() {
+      const svg = wrapper.querySelector('svg');
+      if (!svg) return;
 
-      elements.forEach(el => {
-        // ツールチップに表示する名前の判定
-        let name = el.getAttribute('name') || el.getAttribute('title') || el.getAttribute('id');
+      // すべてのクリック可能なパス・図形要素を取得
+      const clickableElements = svg.querySelectorAll('path, polygon, rect, circle, g[id^="JP26"]');
+
+      clickableElements.forEach(el => {
+        // ツールチップ表示名の特定
+        let regionName = el.getAttribute('name') || el.getAttribute('title') || el.getAttribute('data-name');
+        
         if (currentMapMode === 'kyoto') {
           const id = el.getAttribute('id');
-          if (kyotoCityMap[id]) name = kyotoCityMap[id];
+          if (kyotoCityMap[id]) regionName = kyotoCityMap[id];
         }
 
-        // 塗りつぶし（クリック）
+        // 着色（クリック）
         el.addEventListener('click', (e) => {
           e.stopPropagation();
-          el.setAttribute('fill', currentColor);
-          // グループ化されている場合、中のpath全ても塗る
-          el.querySelectorAll('path').forEach(p => p.setAttribute('fill', currentColor));
+          applyColor(el, currentPaintColor);
         });
 
-        // ツールチップ表示
-        if (name) {
+        // ホバー処理
+        if (regionName) {
           el.addEventListener('mouseenter', () => {
-            tooltip.innerText = name;
+            tooltip.innerText = regionName;
             tooltip.style.display = 'block';
           });
           el.addEventListener('mousemove', (e) => {
@@ -218,7 +357,67 @@
       });
     }
 
-    // 初期表示（日本地図）
+    // 色適用処理（グループ要素対応）
+    function applyColor(element, color) {
+      if (element.tagName.toLowerCase() === 'g') {
+        element.querySelectorAll('path, polygon, rect, circle').forEach(child => {
+          child.style.fill = color;
+          child.setAttribute('fill', color);
+        });
+      } else {
+        element.style.fill = color;
+        element.setAttribute('fill', color);
+      }
+    }
+
+    // 全色リセット
+    function resetMapColors() {
+      const svg = wrapper.querySelector('svg');
+      if (!svg) return;
+      svg.querySelectorAll('path, polygon, rect, circle').forEach(el => {
+        el.style.fill = '#ffffff';
+        el.setAttribute('fill', '#ffffff');
+      });
+    }
+
+    // PNG画像としてダウンロード保存
+    function saveAsImage() {
+      const svg = wrapper.querySelector('svg');
+      if (!svg) return;
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      // SVGのサイズ取得
+      const svgRect = svg.getBoundingClientRect();
+      canvas.width = svgRect.width * 2; // 高解像度化
+      canvas.height = svgRect.height * 2;
+
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        // 背景色の描画
+        ctx.fillStyle = wrapper.style.backgroundColor || '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 地図の描画
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+
+        // ダウンロードリンク作成
+        const a = document.createElement('a');
+        a.download = `${currentMapMode}_塗りえ.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      };
+
+      img.src = url;
+    }
+
+    // 初回実行
     switchMap('japan');
   </script>
 </body>
