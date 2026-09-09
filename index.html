@@ -2,84 +2,167 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>日本地図ぬりえツール</title>
 <style>
+  :root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --bg-main: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-color: #1f2937;
+    --border-color: #e5e7eb;
+  }
+
   body {
-    font-family: "Segoe UI", sans-serif;
-    background: #eef0f4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-color);
     margin: 0;
-    padding: 20px;
+    padding: 24px 16px;
   }
 
   h1 {
     text-align: center;
-    margin-bottom: 20px;
-    font-weight: 600;
+    margin: 0 0 24px 0;
+    font-size: 24px;
+    font-weight: 700;
   }
 
+  /* コントロールパネルのカード化 */
   #panel {
+    max-width: 900px;
+    margin: 0 auto 24px auto;
+    padding: 16px 20px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 16px;
+    align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
   }
 
-  .btn {
-    padding: 10px 16px;
-    border-radius: 8px;
+  .panel-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* カラーパレット */
+  .color-presets {
+    display: flex;
+    gap: 6px;
+  }
+  .color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px var(--border-color);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .color-dot:hover {
+    transform: scale(1.15);
+  }
+
+  input[type="color"] {
+    -webkit-appearance: none;
     border: none;
-    background: #4a6cf7;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+  }
+  input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  input[type="color"]::-webkit-color-swatch {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+  }
+
+  /* ボタンデザイン */
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary);
     color: white;
     cursor: pointer;
     font-size: 14px;
-    transition: 0.2s;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   }
   .btn:hover {
-    background: #3a57c9;
+    background: var(--primary-hover);
+  }
+
+  .btn-outline {
+    background: #fff;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+  }
+  .btn-outline:hover {
+    background: #f9fafb;
   }
 
   .toggle-btn {
-    background: #555;
+    background: #6b7280;
   }
   .toggle-btn.active {
-    background: #2ecc71;
+    background: #10b981;
   }
 
-  #colorPicker, #bgColorPicker {
-    padding: 6px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-  }
-
+  /* 地図エリア */
   #map {
     width: 900px;
     max-width: 100%;
     margin: 0 auto;
     background: white;
     border-radius: 12px;
-    padding: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    padding: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+    transition: background 0.2s ease;
   }
 
   #map svg {
     width: 100%;
     height: auto;
+    display: block;
   }
 
   .prefecture {
     cursor: pointer;
-    transition: 0.15s;
+    transition: fill 0.15s ease, opacity 0.15s ease;
   }
   .prefecture:hover {
-    opacity: 0.7;
+    opacity: 0.8;
   }
 
+  /* 県名表示スタイル */
   .label {
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: bold;
     pointer-events: none;
-    fill: #333;
+    fill: #1f2937;
+    user-select: none;
+    text-anchor: middle;
+    dominant-baseline: central;
+    display: none; /* 初期OFF */
   }
 </style>
 </head>
@@ -88,13 +171,27 @@
 <h1>日本地図ぬりえツール</h1>
 
 <div id="panel">
-  <label>塗る色：<input type="color" id="colorPicker" value="#ff0000"></label>
-  <label>背景色：<input type="color" id="bgColorPicker" value="#ffffff"></label>
+  <div class="panel-group">
+    <label for="colorPicker">塗る色:</label>
+    <input type="color" id="colorPicker" value="#ef4444">
+    <div class="color-presets">
+      <div class="color-dot" style="background:#ef4444;" data-color="#ef4444"></div>
+      <div class="color-dot" style="background:#3b82f6;" data-color="#3b82f6"></div>
+      <div class="color-dot" style="background:#10b981;" data-color="#10b981"></div>
+      <div class="color-dot" style="background:#f59e0b;" data-color="#f59e0b"></div>
+      <div class="color-dot" style="background:#8b5cf6;" data-color="#8b5cf6"></div>
+    </div>
+  </div>
 
-  <button class="btn" id="fillAllBtn">全部塗りつぶし</button>
-  <button class="btn" id="resetBtn">リセット</button>
-  <button class="btn toggle-btn" id="labelToggleBtn">県名 ON/OFF</button>
-  <button class="btn" id="saveBtn">画像保存（PNG）</button>
+  <div class="panel-group">
+    <label for="bgColorPicker">背景色:</label>
+    <input type="color" id="bgColorPicker" value="#ffffff">
+  </div>
+
+  <button class="btn btn-outline" id="fillAllBtn">一括塗り</button>
+  <button class="btn btn-outline" id="resetBtn">リセット</button>
+  <button class="btn toggle-btn" id="labelToggleBtn">県名 表示</button>
+  <button class="btn" id="saveBtn">PNG画像保存</button>
 </div>
 
 <div id="map">読み込み中...</div>
@@ -102,40 +199,71 @@
 <script>
 const MAP_SVG_PATH = "map-full.svg";
 
+// 島が多い県や形状により中心がずれる県の位置補正オフセット（必要に応じて微調整）
+const LABEL_OFFSETS = {
+  "沖縄": { x: 0, y: -10 },
+  "長崎": { x: 10, y: 0 },
+  "鹿児島": { x: 5, y: -5 },
+  "東京": { x: -10, y: -10 },
+  "北海道": { x: 10, y: 10 }
+};
+
+// 色文字列（#hex または rgb(...)）を統一的なHEXに変換・比較用ヘルパー
+function colorToHex(colorStr) {
+  if (!colorStr) return "";
+  if (colorStr.startsWith("#")) return colorStr.toLowerCase();
+  
+  const ctx = document.createElement("canvas").getContext("2d");
+  ctx.fillStyle = colorStr;
+  return ctx.fillStyle.toLowerCase();
+}
+
 window.addEventListener("DOMContentLoaded", async () => {
   const container = document.getElementById("map");
 
-  // SVG読み込み
-  const res = await fetch(MAP_SVG_PATH);
-  const svgText = await res.text();
-  container.innerHTML = svgText;
+  // SVGの読み込み
+  try {
+    const res = await fetch(MAP_SVG_PATH);
+    const svgText = await res.text();
+    container.innerHTML = svgText;
+  } catch (err) {
+    container.innerHTML = "地図データの読み込みに失敗しました。";
+    return;
+  }
 
   const svg = container.querySelector("svg");
   const prefs = container.querySelectorAll(".prefecture");
-
   const colorInput = document.getElementById("colorPicker");
   const bgColorInput = document.getElementById("bgColorPicker");
 
-  // ★ 県名テキストを自動生成して追加
+  // パレットプリセット選択
+  document.querySelectorAll(".color-dot").forEach(dot => {
+    dot.addEventListener("click", () => {
+      colorInput.value = dot.dataset.color;
+    });
+  });
+
+  // ★ 県名テキストの自動生成（位置補正付き）
   prefs.forEach(pref => {
     const titleEl = pref.querySelector("title");
     if (!titleEl) return;
 
-    // 「沖縄 / Okinawa」→「沖縄」
     const raw = titleEl.textContent.trim();
     const jp = raw.split("/")[0].trim();
 
-    // 形の中心座標を計算
     const bbox = pref.getBBox();
-    const cx = bbox.x + bbox.width / 2;
-    const cy = bbox.y + bbox.height / 2;
+    let cx = bbox.x + bbox.width / 2;
+    let cy = bbox.y + bbox.height / 2;
+
+    if (LABEL_OFFSETS[jp]) {
+      cx += LABEL_OFFSETS[jp].x;
+      cy += LABEL_OFFSETS[jp].y;
+    }
 
     const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
     text.setAttribute("class", "label");
     text.setAttribute("x", cx);
     text.setAttribute("y", cy);
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("dominant-baseline", "middle");
     text.textContent = jp;
 
     pref.appendChild(text);
@@ -143,37 +271,40 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const labels = container.querySelectorAll(".label");
 
-  // 背景色（見た目だけ）
+  // 背景色のリアルタイム変更
   bgColorInput.addEventListener("input", () => {
     container.style.background = bgColorInput.value;
   });
 
-  // クリックで塗る／同じ色なら消す
+  // ★ クリックで塗る / 同じ色なら消す（トグル処理）
   prefs.forEach(pref => {
     pref.addEventListener("click", e => {
       const current = e.currentTarget;
-      const selectedColor = colorInput.value;
+      const selectedColorHex = colorToHex(colorInput.value);
+      const currentColorHex = colorToHex(current.style.fill);
 
-      if (current.style.fill === selectedColor) {
-        current.style.fill = ""; // 色を消す
+      if (currentColorHex === selectedColorHex) {
+        current.style.fill = ""; // 色を削除（クリア）
       } else {
-        current.style.fill = selectedColor;
+        current.style.fill = selectedColorHex;
       }
     });
   });
 
-  // 県名 ON/OFF
+  // ★ 県名 ON/OFF (初期表示はOFF)
   const labelBtn = document.getElementById("labelToggleBtn");
-  let labelVisible = true;
+  let labelVisible = false;
+
   labelBtn.addEventListener("click", () => {
     labelVisible = !labelVisible;
     labels.forEach(l => {
-      l.style.display = labelVisible ? "block" : "none";
+      l.style.display = labelVisible ? "inline" : "none";
     });
-    labelBtn.classList.toggle("active");
+    labelBtn.textContent = labelVisible ? "県名 非表示" : "県名 表示";
+    labelBtn.classList.toggle("active", labelVisible);
   });
 
-  // 全部塗りつぶし
+  // 全体塗りつぶし
   document.getElementById("fillAllBtn").addEventListener("click", () => {
     const c = colorInput.value;
     prefs.forEach(p => p.style.fill = c);
@@ -186,7 +317,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     bgColorInput.value = "#ffffff";
   });
 
-  // PNG保存（背景透過）
+  // ★ PNG保存（背景色描画に対応）
   document.getElementById("saveBtn").addEventListener("click", () => {
     const serializer = new XMLSerializer();
     const svgStr = serializer.serializeToString(svg);
@@ -198,11 +329,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     img.onload = () => {
       const vb = svg.viewBox.baseVal;
       const canvas = document.createElement("canvas");
-      canvas.width = vb.width;
-      canvas.height = vb.height;
+      canvas.width = vb.width || svg.clientWidth || 900;
+      canvas.height = vb.height || svg.clientHeight || 700;
 
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0); // 透過背景のまま描画
+
+      // 指定した背景色を塗る
+      ctx.fillStyle = bgColorInput.value;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // SVG画像の描画
+      ctx.drawImage(img, 0, 0);
 
       URL.revokeObjectURL(url);
 
