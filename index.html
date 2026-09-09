@@ -3,14 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>日本地図ぬりえツール</title>
-
-<!-- Shippori Mincho -->
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
-
 <style>
   body {
-    font-family: "Shippori Mincho", serif;
-    background: #f5f5f5;
+    font-family: "Segoe UI", sans-serif;
+    background: #eef0f4;
     margin: 0;
     padding: 20px;
   }
@@ -33,14 +29,21 @@
     padding: 10px 16px;
     border-radius: 8px;
     border: none;
-    background: #333;
+    background: #4a6cf7;
     color: white;
     cursor: pointer;
     font-size: 14px;
     transition: 0.2s;
   }
   .btn:hover {
+    background: #3a57c9;
+  }
+
+  .toggle-btn {
     background: #555;
+  }
+  .toggle-btn.active {
+    background: #2ecc71;
   }
 
   #colorPicker, #bgColorPicker {
@@ -51,19 +54,18 @@
   }
 
   #map {
-    width: 528px;
-    height: 528px;
+    width: 900px;
+    max-width: 100%;
     margin: 0 auto;
     background: white;
     border-radius: 12px;
-    padding: 0;
+    padding: 10px;
     box-shadow: 0 0 12px rgba(0,0,0,0.15);
-    position: relative;
   }
 
   #map svg {
-    width: 528px;
-    height: 528px;
+    width: 100%;
+    height: auto;
   }
 
   .prefecture {
@@ -75,9 +77,9 @@
   }
 
   .label {
-    font-size: 14px;
-    fill: #222;
+    font-size: 12px;
     pointer-events: none;
+    fill: #333;
   }
 </style>
 </head>
@@ -86,13 +88,13 @@
 <h1>日本地図ぬりえツール</h1>
 
 <div id="panel">
-  <label>色：<input type="color" id="colorPicker" value="#ff0000"></label>
-  <label>背景：<input type="color" id="bgColorPicker" value="#ffffff"></label>
+  <label>塗る色：<input type="color" id="colorPicker" value="#ff0000"></label>
+  <label>背景色：<input type="color" id="bgColorPicker" value="#ffffff"></label>
 
-  <button class="btn" id="fillAllBtn">全部塗る</button>
+  <button class="btn" id="fillAllBtn">全部塗りつぶし</button>
   <button class="btn" id="resetBtn">リセット</button>
-  <button class="btn" id="labelToggleBtn">県名 ON/OFF</button>
-  <button class="btn" id="saveBtn">保存（PNG）</button>
+  <button class="btn toggle-btn" id="labelToggleBtn">県名 ON/OFF</button>
+  <button class="btn" id="saveBtn">画像保存（PNG）</button>
 </div>
 
 <div id="map">読み込み中...</div>
@@ -100,79 +102,13 @@
 <script>
 const MAP_SVG_PATH = "map-full.svg";
 
-// 47都道府県の固定座標（528×528 + 左10/上5補正）
-const labelPos = {
-  "北海道": {x: 260, y: 60},
-  "青森": {x: 240, y: 140},
-  "岩手": {x: 260, y: 180},
-  "宮城": {x: 260, y: 220},
-  "秋田": {x: 220, y: 180},
-  "山形": {x: 230, y: 230},
-  "福島": {x: 250, y: 270},
-
-  "茨城": {x: 300, y: 260},
-  "栃木": {x: 280, y: 240},
-  "群馬": {x: 260, y: 240},
-  "埼玉": {x: 260, y: 280},
-  "千葉": {x: 300, y: 300},
-  "東京": {x: 270, y: 300},
-  "神奈川": {x: 270, y: 330},
-
-  "新潟": {x: 210, y: 240},
-  "富山": {x: 180, y: 260},
-  "石川": {x: 160, y: 240},
-  "福井": {x: 160, y: 280},
-  "山梨": {x: 240, y: 300},
-  "長野": {x: 220, y: 280},
-  "岐阜": {x: 200, y: 300},
-  "静岡": {x: 240, y: 330},
-  "愛知": {x: 210, y: 330},
-
-  "三重": {x: 200, y: 350},
-  "滋賀": {x: 180, y: 320},
-  "京都": {x: 170, y: 300},
-  "大阪": {x: 170, y: 330},
-  "兵庫": {x: 150, y: 330},
-  "奈良": {x: 190, y: 340},
-  "和歌山": {x: 180, y: 370},
-
-  "鳥取": {x: 130, y: 300},
-  "島根": {x: 110, y: 280},
-  "岡山": {x: 130, y: 330},
-  "広島": {x: 110, y: 330},
-  "山口": {x: 90, y: 330},
-
-  "徳島": {x: 180, y: 390},
-  "香川": {x: 170, y: 380},
-  "愛媛": {x: 150, y: 380},
-  "高知": {x: 160, y: 410},
-
-  "福岡": {x: 80, y: 360},
-  "佐賀": {x: 70, y: 350},
-  "長崎": {x: 50, y: 360},
-  "熊本": {x: 80, y: 390},
-  "大分": {x: 110, y: 380},
-  "宮崎": {x: 100, y: 420},
-  "鹿児島": {x: 80, y: 440},
-
-  "沖縄": {x: 260, y: 480}
-};
-
-// RGB → HEX
-function rgbToHex(rgb){
-  if(!rgb) return "";
-  if(rgb.startsWith("#")) return rgb.toLowerCase();
-  const m = rgb.match(/\d+/g);
-  if(!m) return rgb;
-  const [r,g,b] = m.map(Number);
-  return "#" + [r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");
-}
-
 window.addEventListener("DOMContentLoaded", async () => {
   const container = document.getElementById("map");
 
+  // SVG読み込み
   const res = await fetch(MAP_SVG_PATH);
-  container.innerHTML = await res.text();
+  const svgText = await res.text();
+  container.innerHTML = svgText;
 
   const svg = container.querySelector("svg");
   const prefs = container.querySelectorAll(".prefecture");
@@ -180,91 +116,99 @@ window.addEventListener("DOMContentLoaded", async () => {
   const colorInput = document.getElementById("colorPicker");
   const bgColorInput = document.getElementById("bgColorPicker");
 
-  let labelsVisible = false;
+  // ★ 県名テキストを自動生成して追加
+  prefs.forEach(pref => {
+    const titleEl = pref.querySelector("title");
+    if (!titleEl) return;
 
-  // 県名生成
-  function createLabels(){
-    Object.entries(labelPos).forEach(([name,pos])=>{
-      const text = document.createElementNS("http://www.w3.org/2000/svg","text");
-      text.setAttribute("class","label");
-      text.setAttribute("x",pos.x);
-      text.setAttribute("y",pos.y);
-      text.setAttribute("text-anchor","middle");
-      text.setAttribute("dominant-baseline","middle");
-      text.textContent = name;
-      svg.appendChild(text);
-    });
-  }
+    // 「沖縄 / Okinawa」→「沖縄」
+    const raw = titleEl.textContent.trim();
+    const jp = raw.split("/")[0].trim();
 
-  // 県名削除
-  function removeLabels(){
-    svg.querySelectorAll(".label").forEach(el=>el.remove());
-  }
+    // 形の中心座標を計算
+    const bbox = pref.getBBox();
+    const cx = bbox.x + bbox.width / 2;
+    const cy = bbox.y + bbox.height / 2;
 
-  // クリックで色付く／消える
-  prefs.forEach(pref=>{
-    pref.addEventListener("click",()=>{
-      const now = rgbToHex(pref.style.fill);
-      const sel = colorInput.value.toLowerCase();
-      pref.style.fill = (now===sel) ? "" : sel;
-    });
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("class", "label");
+    text.setAttribute("x", cx);
+    text.setAttribute("y", cy);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "middle");
+    text.textContent = jp;
+
+    pref.appendChild(text);
   });
 
-  // 背景色変更
-  bgColorInput.addEventListener("input",()=>{
+  const labels = container.querySelectorAll(".label");
+
+  // 背景色（見た目だけ）
+  bgColorInput.addEventListener("input", () => {
     container.style.background = bgColorInput.value;
   });
 
-  // 県名 ON/OFF
-  document.getElementById("labelToggleBtn").addEventListener("click",()=>{
-    labelsVisible = !labelsVisible;
-    if(labelsVisible) createLabels();
-    else removeLabels();
+  // クリックで塗る／同じ色なら消す
+  prefs.forEach(pref => {
+    pref.addEventListener("click", e => {
+      const current = e.currentTarget;
+      const selectedColor = colorInput.value;
+
+      if (current.style.fill === selectedColor) {
+        current.style.fill = ""; // 色を消す
+      } else {
+        current.style.fill = selectedColor;
+      }
+    });
   });
 
-  // 全部塗る
-  document.getElementById("fillAllBtn").addEventListener("click",()=>{
-    const c = colorInput.value.toLowerCase();
-    prefs.forEach(p=>p.style.fill=c);
+  // 県名 ON/OFF
+  const labelBtn = document.getElementById("labelToggleBtn");
+  let labelVisible = true;
+  labelBtn.addEventListener("click", () => {
+    labelVisible = !labelVisible;
+    labels.forEach(l => {
+      l.style.display = labelVisible ? "block" : "none";
+    });
+    labelBtn.classList.toggle("active");
+  });
+
+  // 全部塗りつぶし
+  document.getElementById("fillAllBtn").addEventListener("click", () => {
+    const c = colorInput.value;
+    prefs.forEach(p => p.style.fill = c);
   });
 
   // リセット
-  document.getElementById("resetBtn").addEventListener("click",()=>{
-    prefs.forEach(p=>p.style.fill="");
-    container.style.background="#ffffff";
-    bgColorInput.value="#ffffff";
-    removeLabels();
-    labelsVisible=false;
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    prefs.forEach(p => p.style.fill = "");
+    container.style.background = "#ffffff";
+    bgColorInput.value = "#ffffff";
   });
 
-  // PNG保存
-  document.getElementById("saveBtn").addEventListener("click",()=>{
+  // PNG保存（背景透過）
+  document.getElementById("saveBtn").addEventListener("click", () => {
     const serializer = new XMLSerializer();
     const svgStr = serializer.serializeToString(svg);
 
-    const svgBlob = new Blob([svgStr],{type:"image/svg+xml"});
+    const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(svgBlob);
 
     const img = new Image();
-    img.onload = ()=>{
+    img.onload = () => {
+      const vb = svg.viewBox.baseVal;
       const canvas = document.createElement("canvas");
-      canvas.width = 528;
-      canvas.height = 528;
+      canvas.width = vb.width;
+      canvas.height = vb.height;
+
       const ctx = canvas.getContext("2d");
-
-      const bg = bgColorInput.value.toLowerCase();
-      if(bg !== "#ffffff"){
-        ctx.fillStyle = bg;
-        ctx.fillRect(0,0,528,528);
-      }
-
-      ctx.drawImage(img,0,0);
+      ctx.drawImage(img, 0, 0); // 透過背景のまま描画
 
       URL.revokeObjectURL(url);
 
-      const png = canvas.toDataURL("image/png");
+      const pngUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
-      a.href = png;
+      a.href = pngUrl;
       a.download = "japan-map.png";
       a.click();
     };
