@@ -79,6 +79,7 @@
   .label {
     font-size: 12px;
     pointer-events: none;
+    fill: #333;
   }
 </style>
 </head>
@@ -111,12 +112,38 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   const svg = container.querySelector("svg");
   const prefs = container.querySelectorAll(".prefecture");
-  const labels = container.querySelectorAll(".label");
 
   const colorInput = document.getElementById("colorPicker");
   const bgColorInput = document.getElementById("bgColorPicker");
 
-  // 背景色変更（見た目だけ、保存時は透過）
+  // ★ 県名テキストを自動生成して追加
+  prefs.forEach(pref => {
+    const titleEl = pref.querySelector("title");
+    if (!titleEl) return;
+
+    // 「沖縄 / Okinawa」→「沖縄」
+    const raw = titleEl.textContent.trim();
+    const jp = raw.split("/")[0].trim();
+
+    // 形の中心座標を計算
+    const bbox = pref.getBBox();
+    const cx = bbox.x + bbox.width / 2;
+    const cy = bbox.y + bbox.height / 2;
+
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("class", "label");
+    text.setAttribute("x", cx);
+    text.setAttribute("y", cy);
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "middle");
+    text.textContent = jp;
+
+    pref.appendChild(text);
+  });
+
+  const labels = container.querySelectorAll(".label");
+
+  // 背景色（見た目だけ）
   bgColorInput.addEventListener("input", () => {
     container.style.background = bgColorInput.value;
   });
@@ -152,7 +179,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     prefs.forEach(p => p.style.fill = c);
   });
 
-  // リセット（色を全部消す）
+  // リセット
   document.getElementById("resetBtn").addEventListener("click", () => {
     prefs.forEach(p => p.style.fill = "");
     container.style.background = "#ffffff";
@@ -175,9 +202,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       canvas.height = vb.height;
 
       const ctx = canvas.getContext("2d");
-
-      // 背景透過（fillRectしない）
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0); // 透過背景のまま描画
 
       URL.revokeObjectURL(url);
 
